@@ -1,0 +1,20 @@
+{
+  "uid": "netrasetu-programme",
+  "title": "Programme and model health",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Grades",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "netrasetu_grade_total", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Quality rejects",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [{ "expr": "netrasetu_quality_reject_total", "refId": "A" }]
+    }
+  ]
+}

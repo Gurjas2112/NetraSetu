@@ -1,2 +1,92 @@
-# Platform services (Postgres, Keycloak, Garage, Prometheus, Grafana) are added in milestone M2.
-services: {}
+# Local platform. Migrations are NOT mounted into docker-entrypoint-initdb.d:
+# every tier applies them with scripts/migrate.py, so there is one migration path
+# (AGENTS.md M2 correction).
+name: netrasetu
+
+services:
+  postgres:
+    image: postgres:17
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_TAG:?set KEYCLOAK_TAG in .env}
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?set KEYCLOAK_ADMIN in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_HEALTH_ENABLED: "true"
+    ports: ["8080:8080"]
+    # Keycloak only imports files named <realm>-realm.json. The committed file keeps
+    # the name from AGENTS.md and is mounted under the name the importer accepts.
+    volumes:
+      - ./platform/keycloak/realm-export.json:/opt/keycloak/data/import/netrasetu-realm.json:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3; grep -q '200' <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    mem_limit: 1g
+
+  garage:
+    image: dxflrs/garage:v2.3.0
+    ports: ["3900:3900", "3903:3903"]
+    volumes:
+      - ./platform/garage/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    mem_limit: 256m
+
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_TAG:?set PROMETHEUS_TAG in .env}
+    volumes: ["./platform/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    mem_limit: 256m
+
+  grafana:
+    image: grafana/grafana-oss:${GRAFANA_TAG:?set GRAFANA_TAG in .env}
+    ports: ["3000:3000"]
+    volumes:
+      - ./platform/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./platform/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    mem_limit: 256m
+
+volumes:
+  pgdata: {}
+  garage-meta: {}
+  garage-data: {}

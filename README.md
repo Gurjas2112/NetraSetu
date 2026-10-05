@@ -53,6 +53,22 @@ python scripts/export_openapi.py
 npm --prefix web run gen:api
 ```
 
+## Platform (Postgres, Keycloak, Garage, Prometheus, Grafana)
+
+Copy `.env.example` to `.env` and fill it in. `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_TAG`, `PROMETHEUS_TAG` and `GRAFANA_TAG` have to be set before Compose will start. Pin exact image tags; do not use `latest`. Postgres is published on `${POSTGRES_PORT:-5432}`. Set `POSTGRES_PORT` if something else on the machine already listens on 5432, and use that port in `ADMIN_DATABASE_URL`.
+
+`python scripts/garage_init.py` writes `platform/garage/garage.toml` (gitignored) if it is missing, then assigns the Garage layout, creates the bucket and key, and prints `S3_ACCESS_KEY` / `S3_SECRET_KEY` for `.env`. Start Compose first so the Garage container is up before that second step; the script creates the toml on its own, so a first run that fails at `docker compose exec` still leaves a config you can boot with.
+
+```powershell
+python scripts/garage_init.py
+docker compose up -d --wait
+python scripts/garage_init.py
+python scripts/migrate.py
+python scripts/migrate.py
+```
+
+The second `migrate.py` prints `applied nothing`.
+
 ## Using the real MATLAB engine
 
 Check the stub contract from the repository root:
