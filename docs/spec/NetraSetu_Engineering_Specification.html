@@ -1,0 +1,3456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetraSetu — Engineering Specification | SIH PS 26038</title>
+<style>
+:root{
+  --paper:#F7F8F8; --card:#FFFFFF; --ink:#12171C; --ink-2:#2C363E;
+  --muted:#5E6B75; --rule:#DCE1E4; --rule-2:#EDF0F1;
+  --signal:#0E7C86; --signal-wash:#E6F1F2;
+
+  /* lesion semantics — used only where they mean something */
+  --lx-exudate:#E8C33A; --lx-cottonwool:#B9D6C6; --lx-haem:#8E1F2B;
+  --lx-microan:#C2185B; --lx-vessel:#5A1A14; --lx-neovasc:#7B2FF7;
+
+  /* decision states */
+  --dx-refer:#B3261E; --dx-routine:#1B7F4C; --dx-retake:#B26B00;
+
+  --void:#0B0F14; --slate-7:#263038; --slate-4:#7C8B98;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,sans-serif;
+  font-size:17px; line-height:1.6; font-feature-settings:"kern" 1;
+}
+.wrap{max-width:1140px;margin:0 auto;padding:0 22px 96px}
+
+/* ── hero ───────────────────────────────────────────── */
+.hero{padding:56px 0 40px;border-bottom:2px solid var(--ink)}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:center}
+@media(min-width:840px){.hero-grid{grid-template-columns:1.25fr .75fr}}
+.hero h1{font-size:clamp(2.1rem,6vw,3.1rem);line-height:1.02;letter-spacing:-.022em;
+  font-weight:600;margin:0 0 14px}
+.hero .sub{font-size:1.15rem;color:var(--ink-2);max-width:56ch;margin:0 0 22px}
+.meta{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:.78rem;
+  color:var(--muted);line-height:2}
+.meta b{color:var(--ink);font-weight:500}
+.fundus{width:100%;max-width:330px;margin:0 auto;display:block}
+
+/* ── layout ─────────────────────────────────────────── */
+.cols{display:grid;grid-template-columns:1fr;gap:40px}
+@media(min-width:1000px){
+  .cols{grid-template-columns:210px 1fr;gap:56px;align-items:start}
+  nav.toc{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto}
+}
+nav.toc{padding-top:34px;font-size:.84rem;line-height:1.45}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;
+  padding:5px 0 5px 11px;border-left:2px solid var(--rule)}
+nav.toc a:hover,nav.toc a:focus{color:var(--signal);border-left-color:var(--signal)}
+nav.toc .g{margin-top:16px;font-weight:600;color:var(--ink);border:0;padding-left:0}
+
+section{padding-top:38px}
+h2{font-size:1.6rem;line-height:1.15;letter-spacing:-.014em;font-weight:600;
+  margin:0 0 6px;padding-top:14px;border-top:1px solid var(--ink)}
+h2 .n{font-family:'IBM Plex Mono',monospace;font-size:.82rem;color:var(--muted);
+  display:block;margin-bottom:8px;font-weight:400}
+h3{font-size:1.12rem;font-weight:600;margin:32px 0 8px;letter-spacing:-.006em}
+h4{font-size:.98rem;font-weight:600;margin:22px 0 6px;color:var(--ink-2)}
+p{margin:0 0 15px;max-width:74ch}
+ul,ol{margin:0 0 16px;padding-left:22px;max-width:72ch}
+li{margin-bottom:7px}
+a{color:var(--signal)}
+strong{font-weight:600}
+code{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:.86em;
+  background:var(--rule-2);padding:1px 5px;border-radius:3px}
+pre{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:.76rem;
+  line-height:1.5;background:var(--card);border:1px solid var(--rule);
+  padding:16px;overflow-x:auto;margin:0 0 20px}
+pre code{background:none;padding:0;font-size:inherit}
+
+table{width:100%;border-collapse:collapse;margin:0 0 22px;font-size:.9rem}
+th{text-align:left;font-weight:600;padding:9px 12px 9px 0;
+  border-bottom:1.5px solid var(--ink);vertical-align:bottom}
+td{padding:11px 12px 11px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+td:last-child,th:last-child{padding-right:0}
+
+.lede{font-size:1.09rem;color:var(--ink-2);max-width:66ch}
+.note{border-left:3px solid var(--signal);background:var(--signal-wash);
+  padding:14px 18px;margin:0 0 20px;font-size:.94rem;max-width:74ch}
+.note p:last-child{margin-bottom:0}
+.warn{border-left:3px solid var(--dx-retake);background:#FBF3E6}
+.kill{border-left:3px solid var(--dx-refer);background:#FBECEB}
+
+figure{margin:26px 0 30px}
+.figbox{background:var(--card);border:1px solid var(--rule);padding:14px 8px;
+  overflow-x:auto}
+.figbox svg{display:block;min-width:660px;width:100%;height:auto;margin:0 auto}
+figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;max-width:74ch}
+figcaption b{color:var(--ink);font-weight:600}
+.scrollhint{display:block;font-size:.74rem;color:var(--muted);
+  font-family:'IBM Plex Mono',monospace;margin-bottom:6px}
+@media(min-width:760px){.scrollhint{display:none}}
+
+/* svg text defaults */
+svg text{font-family:'IBM Plex Sans','Segoe UI',system-ui,sans-serif}
+svg .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+
+.swatch{display:inline-block;width:11px;height:11px;border-radius:2px;
+  margin-right:7px;vertical-align:-1px;border:1px solid rgba(0,0,0,.18)}
+
+.pill{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+  padding:2px 8px;border:1px solid var(--rule);border-radius:99px;color:var(--muted);
+  margin:0 6px 6px 0}
+.pill.keep{border-color:var(--dx-routine);color:var(--dx-routine)}
+.pill.cut{border-color:var(--dx-refer);color:var(--dx-refer)}
+.pill.scope{border-color:var(--dx-retake);color:var(--dx-retake)}
+
+footer{margin-top:56px;padding-top:22px;border-top:2px solid var(--ink);
+  font-size:.82rem;color:var(--muted);max-width:74ch}
+
+@media print{
+  body{background:#fff;font-size:10.5pt}
+  nav.toc{display:none}
+  .cols{grid-template-columns:1fr}
+  .wrap{max-width:none;padding:0}
+  figure,table,pre,.note{break-inside:avoid}
+  h2{break-after:avoid}
+  .figbox svg{min-width:0}
+  .figbox{overflow:visible}
+  a{color:var(--ink);text-decoration:none}
+  @page{margin:16mm}
+}
+@media(prefers-reduced-motion:no-preference){
+  .fundus .pulse{animation:p 3.4s ease-in-out infinite}
+  @keyframes p{0%,100%{opacity:.35}50%{opacity:1}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="hero-grid">
+    <div>
+      <h1>NetraSetu</h1>
+      <p class="sub">An explainable diabetic retinopathy screening system for district-scale
+      deployment in rural India. Engineering specification, deployment architecture and
+      prototype build plan.</p>
+      <div class="meta">
+        <b>Problem statement</b> &nbsp;SIH 26038 — Explainable AI for Diabetic Retinopathy Screening<br>
+        <b>Organisation</b> &nbsp;MathWorks &nbsp;&nbsp; <b>Theme</b> &nbsp;MedTech / HealthTech<br>
+        <b>Document</b> &nbsp;v3.2 — full specification, system diagrams, setup, operations, caching, Supabase<br>
+        <b>Scale target</b> &nbsp;100,000 screenings / district / year
+      </div>
+    </div>
+    <div>
+      <!-- Hero: schematic fundus in the product's own lesion colour language -->
+      <svg class="fundus" viewBox="0 0 320 320" role="img"
+           aria-label="Schematic retinal fundus showing optic disc, vessel arcades and three marked lesions">
+        <defs>
+          <radialGradient id="rg" cx="46%" cy="44%" r="62%">
+            <stop offset="0%"  stop-color="#8A3A16"/>
+            <stop offset="62%" stop-color="#5E2410"/>
+            <stop offset="100%" stop-color="#33130A"/>
+          </radialGradient>
+        </defs>
+        <circle cx="160" cy="160" r="150" fill="url(#rg)"/>
+        <!-- vessel arcades -->
+        <g fill="none" stroke="var(--lx-vessel)" stroke-linecap="round" opacity=".88">
+          <path d="M214 152 C 176 118, 118 108, 62 122" stroke-width="6"/>
+          <path d="M214 168 C 176 202, 118 212, 62 200" stroke-width="6"/>
+          <path d="M180 140 C 150 100, 108 84, 72 84"   stroke-width="3.4"/>
+          <path d="M182 182 C 152 224, 110 240, 74 240"  stroke-width="3.4"/>
+          <path d="M150 128 C 128 108, 104 100, 84 104"  stroke-width="2"/>
+          <path d="M152 194 C 130 216, 106 224, 86 220"  stroke-width="2"/>
+          <path d="M212 146 C 232 128, 254 122, 276 126" stroke-width="3"/>
+          <path d="M212 174 C 232 196, 254 202, 276 198" stroke-width="3"/>
+        </g>
+        <!-- optic disc -->
+        <ellipse cx="214" cy="160" rx="27" ry="30" fill="#E8D9A8" opacity=".93"/>
+        <ellipse cx="214" cy="160" rx="14" ry="17" fill="#F3EBD2" opacity=".8"/>
+        <!-- fovea -->
+        <circle cx="122" cy="166" r="17" fill="#2A0F08" opacity=".55"/>
+        <!-- lesions, in the spec's tokens -->
+        <g class="pulse">
+          <circle cx="98"  cy="122" r="4.2" fill="var(--lx-microan)"/>
+          <circle cx="98"  cy="122" r="13"  fill="none" stroke="var(--lx-microan)" stroke-width="1.4" opacity=".85"/>
+          <ellipse cx="150" cy="228" rx="9" ry="7" fill="var(--lx-haem)"/>
+          <circle cx="150"  cy="228" r="18"  fill="none" stroke="var(--lx-haem)" stroke-width="1.4" opacity=".85"/>
+          <path d="M96 196 q9-7 17-1 q7 6 -2 11 q-11 5 -15-3 z" fill="var(--lx-exudate)"/>
+          <circle cx="104" cy="202" r="17" fill="none" stroke="var(--lx-exudate)" stroke-width="1.4" opacity=".85"/>
+        </g>
+        <circle cx="160" cy="160" r="150" fill="none" stroke="var(--rule)" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="cols">
+<nav class="toc" aria-label="Contents">
+  <span class="g">Part I — Position</span>
+  <a href="#s1">1 · Scope and scoring logic</a>
+  <a href="#s2">2 · What is already solved</a>
+  <a href="#s3">3 · Users and scenarios</a>
+  <span class="g">Part II — System</span>
+  <a href="#s4">4 · System architecture</a>
+  <a href="#s5">5 · End-to-end flow</a>
+  <a href="#s6">6 · Algorithm pipeline</a>
+  <a href="#s7">7 · Capacity model</a>
+  <span class="g">Part III — Platform</span>
+  <a href="#s8">8 · Deployment and scaling</a>
+  <a href="#s9">9 · Identity and access</a>
+  <a href="#s10">10 · Data architecture</a>
+  <a href="#s11">11 · Validation</a>
+  <a href="#s12">12 · Regulation</a>
+  <span class="g">Part IV — Build</span>
+  <a href="#s13">13 · Tool register</a>
+  <a href="#s14">14 · Interface design</a>
+  <a href="#s15">15 · Prototype build plan</a>
+  <a href="#s16">16 · Demo script</a>
+  <a href="#s17">17 · Risk register</a>
+  <span class="g">Part V — Setup &amp; operations</span>
+  <a href="#s18">18 · Setup roadmap</a>
+  <a href="#s19">19 · Your machine</a>
+  <a href="#s20">20 · Compute: is Colab needed?</a>
+  <a href="#s21">21 · Installation</a>
+  <a href="#s22">22 · Configuration</a>
+  <a href="#s23">23 · Integration</a>
+  <a href="#s24">24 · Testing</a>
+  <a href="#s25">25 · Deployment</a>
+  <a href="#s26">26 · Caching strategy</a>
+</nav>
+
+<main>
+
+<!-- ══════════════ 1 ══════════════ -->
+<section id="s1">
+<h2><span class="n">Section 1</span>Scope and scoring logic</h2>
+<p class="lede">PS 26038 grades an algorithm, not a platform. Everything in this document
+earns its place by one of two tests, and anything failing both was cut.</p>
+
+<p>The problem statement asks for five modules: image quality assessment, retinal structure
+segmentation, severity grading, explainability, and a Simulink workflow simulation. It names
+its own acceptance criteria — sensitivity above 90% and specificity above 85% for referable
+DR, Grad-CAM outputs rated clinically useful, a resource-allocation model, and validation
+showing the integrated pipeline beats any single technique.</p>
+
+<p>That last clause is an instruction to build an ablation table. Design the architecture
+backwards from it.</p>
+
+<h3>The two tests</h3>
+<p>Every element outside the five graded modules must be either a <strong>regulatory
+precondition</strong> for touching Indian health data, or must <strong>feed a graded
+module</strong>. Applying those tests:</p>
+
+<table>
+<thead><tr><th style="width:34%">Element</th><th style="width:16%">Verdict</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Audit chain, consent ledger</td><td><span class="pill keep">build</span></td>
+<td>Regulatory precondition. No lawful path to production without them.</td></tr>
+<tr><td>Role-based access for clinical users</td><td><span class="pill keep">build</span></td>
+<td>Which ophthalmologist signed a grade is a medico-legal fact. A human-in-the-loop with
+anonymous humans is not a loop.</td></tr>
+<tr><td>Admin dashboard</td><td><span class="pill scope">reframe</span></td>
+<td>Not as observability. As <em>Programme &amp; Model Health</em>, where measured throughput
+meets the SimEvents prediction — which makes it Module 5 content.</td></tr>
+<tr><td>Database and object storage</td><td><span class="pill keep">build</span></td>
+<td>Required, but scoped: pixels never enter the relational store.</td></tr>
+<tr><td>Duplicate and integrity checks</td><td><span class="pill keep">build</span></td>
+<td>The same eye screened twice at one camp silently inflates throughput and wastes grader
+time. A real field failure, cheap to prevent.</td></tr>
+<tr><td>Patient signup and login</td><td><span class="pill cut">cut</span></td>
+<td>Patients must not have accounts. Every account makes you a data fiduciary for it, adds a
+phishing surface aimed at first-time app users, and blocks the people you are trying to reach.
+Signed single-use links are the correct design, not a shortcut.</td></tr>
+<tr><td>Distributed tracing, APM, log aggregation</td><td><span class="pill cut">cut</span></td>
+<td>Zero judge value, one day of cost.</td></tr>
+</tbody>
+</table>
+
+<div class="note kill">
+<p><strong>The governing trade.</strong> When the platform track and the algorithm track
+compete for hours, the algorithm wins. A polished platform wrapped around a 78%-sensitivity
+model loses to a plain one wrapped around 92%.</p>
+</div>
+</section>
+
+<!-- ══════════════ 2 ══════════════ -->
+<section id="s2">
+<h2><span class="n">Section 2</span>What is already solved, and what is not</h2>
+<p class="lede">Detection is commodity in both the US and India. The unsolved layer is
+precisely what this problem statement asks for.</p>
+
+<h3>Solved elsewhere</h3>
+<p>Three autonomous DR systems hold FDA clearance — LumineticsCore (formerly IDx-DR),
+EyeArt, and AEYE-DS. The first cleared in 2018 on a prospective primary-care trial reporting
+87.2% sensitivity and 90.7% specificity for more-than-mild DR. Reimbursement is settled too:
+CPT 92229 was the first CPT code for autonomous AI in any specialty, paying roughly $40 per
+screening against $29 for physician-interpreted remote imaging.</p>
+
+<p>India is not a blank slate either. Remidio's Medios AI runs fully offline on a smartphone
+fundus camera and returns a referable-DR result to a rural operator within about 20 seconds of
+capture, validated at scale in Indian populations.</p>
+
+<h3>Not solved anywhere</h3>
+<table>
+<thead><tr><th style="width:30%">Gap</th><th>Evidence</th><th style="width:26%">Our module</th></tr></thead>
+<tbody>
+<tr><td>Adoption</td><td>Autonomous DR AI reaches under 0.1% of US screenings, eight years
+post-clearance, despite reimbursement and quality-measure incentives.</td>
+<td>The whole product. A solved algorithm attached to an unsolved product.</td></tr>
+<tr><td>Image quality in the field</td><td>Across real US adopters, average nonmydriatic
+gradability ran 49–75% and specificity fell as low as 60%, against 90.7% in the pivotal
+trial.</td><td><strong>Module 1.</strong> Not preprocessing — the open problem.</td></tr>
+<tr><td>Quality assessment as a research topic</td><td>In the DeepDRiD challenge, grading
+kappa reached 0.93 while image-quality accuracy topped out at 0.70. The field solved grading
+and left quality behind.</td><td>Module 1, validated against real quality labels.</td></tr>
+<tr><td>Explanation</td><td>Cleared devices are binary referable/not-referable triage. No
+five-level grade, no lesion-level evidence.</td><td><strong>Module 4.</strong> Evidence Strip,
+ICDR criterion matching, calibrated posterior.</td></tr>
+<tr><td>Scope safety</td><td>These models are not trained to detect other ocular pathology
+that a human tele-grader would catch and report.</td><td>Human-in-the-loop by design, not as
+a fallback.</td></tr>
+<tr><td>Referral completion</td><td>Referral adherence, not detection, is the documented
+bottleneck in Indian DR programmes.</td><td>Patient View ends in a held appointment slot.</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+<p><strong>Use this as your opening rebuttal.</strong> "This is solved in America" is the first
+objection a judge raises. Answering with the 0.1% adoption figure and the 49–75% gradability
+range converts their objection into your thesis.</p>
+</div>
+</section>
+
+<!-- ══════════════ 3 ══════════════ -->
+<section id="s3">
+<h2><span class="n">Section 3</span>Users and scenarios</h2>
+<p class="lede">Four people. Every screen in this system exists because one of them needs it.
+Demo them in this order.</p>
+
+<h3>A — Sunita, ASHA worker, mobile camp, no signal</h3>
+<p>Ambegaon block, Pune district. Tuesday NCD camp. 61 registered diabetics, one Android phone
+with a clip-on fundus lens, 4G that dies by noon. Sunita has never heard the word
+"microaneurysm." She scans an ABHA QR, and the app talks her through capture in Marathi. Her
+third image is rejected — but not as "ungradeable." The app says <em>"Too dark on the nose
+side. Move the light slightly right and take it again."</em> She retakes. Nine seconds later:
+<strong>REFER — see an eye doctor within 4 weeks</strong>, spoken aloud, with a printed QR
+slip. The phone is offline throughout. At 6 p.m. on sub-centre Wi-Fi, 61 cases sync at once.</p>
+<p><em>Forces:</em> rejection with actionable guidance, on-device inference, voice output, a
+queue that survives a dead network, a decision readable at arm's length in sunlight.</p>
+
+<h3>B — Dr. Anjali Rao, retina specialist, 90 cases, one lunch hour</h3>
+<p>Cases sorted by decision value, not ID. One case per viewport, keyboard-driven. Left: the
+fundus at full resolution, deep-zoomable, overlays on number keys. Right: the Evidence Strip —
+six native-resolution crops, each captioned with the ICDR criterion it satisfies. Below: the
+calibrated posterior with the referral threshold drawn as a line. She agrees with 78, overturns
+9 with a reason chip, marks 3 ungradeable. Median 21 seconds.</p>
+<p><em>Forces:</em> keyboard-first review, native-resolution crops, calibration, a
+disagreement-capture loop.</p>
+
+<h3>C — Ramesh, 54, at home</h3>
+<p>An SMS link, no login, signed single-use token. He sees his own retina with two soft
+markers. <em>"Early damage found. Your eyes can still be saved."</em> Three cards: what we
+found, what happens next, where to go — ending in a held slot with a date, not a phone number.
+A toggle expands the full clinical report for when he hands the phone to a doctor.</p>
+<p><em>Forces:</em> two registers of one report, tokenised access without accounts, a referral
+that terminates in an appointment.</p>
+
+<h3>D — Dr. Patil, District Programme Officer</h3>
+<p>One question: how many graders and how much bandwidth for 100,000 screenings a year? Two
+sliders, a contour of 95th-percentile turnaround, one exportable memo.</p>
+<p><em>Forces:</em> the SimEvents model, operable by a non-engineer.</p>
+</section>
+
+<!-- ══════════════ 4 ══════════════ -->
+<section id="s4">
+<h2><span class="n">Section 4</span>System architecture</h2>
+<p class="lede">One MATLAB algorithm, compiled once, served statelessly to every channel.
+Nothing is reimplemented per surface.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 700" role="img" aria-label="Layered system architecture diagram">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z" fill="#5E6B75"/>
+  </marker>
+  <marker id="arT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z" fill="#0E7C86"/>
+  </marker>
+</defs>
+<style>
+  .lyr{fill:#fff;stroke:#DCE1E4;stroke-width:1}
+  .lyrhd{font-size:10px;fill:#5E6B75;letter-spacing:.04em}
+  .bx{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .bxk{fill:#E6F1F2;stroke:#0E7C86;stroke-width:1.4}
+  .bxd{fill:#fff;stroke:#7C8B98;stroke-width:1;stroke-dasharray:4 3}
+  .t{font-size:12.5px;fill:#12171C}
+  .ts{font-size:10.5px;fill:#5E6B75}
+  .ln{stroke:#5E6B75;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+  .lnT{stroke:#0E7C86;stroke-width:1.6;fill:none;marker-end:url(#arT)}
+</style>
+
+<!-- L1 channels -->
+<rect class="lyr" x="18" y="14" width="884" height="92" rx="3"/>
+<text class="lyrhd" x="30" y="32">CHANNEL LAYER — React 19 · Vite · TypeScript · offline-first PWA</text>
+<rect class="bx" x="32" y="42" width="196" height="50" rx="3"/>
+<text class="t" x="46" y="62">Field App</text><text class="ts" x="46" y="78">ASHA / technician · offline</text>
+<rect class="bx" x="240" y="42" width="196" height="50" rx="3"/>
+<text class="t" x="254" y="62">Reviewer Console</text><text class="ts" x="254" y="78">ophthalmologist · keyboard</text>
+<rect class="bx" x="448" y="42" width="196" height="50" rx="3"/>
+<text class="t" x="462" y="62">Patient View</text><text class="ts" x="462" y="78">token link · no account</text>
+<rect class="bx" x="656" y="42" width="232" height="50" rx="3"/>
+<text class="t" x="670" y="62">Admin + District Twin</text><text class="ts" x="670" y="78">Grafana · Simulink web app</text>
+
+<path class="ln" d="M130 92 L130 128"/><path class="ln" d="M338 92 L338 128"/>
+<path class="ln" d="M546 92 L546 128"/><path class="ln" d="M772 92 L772 128"/>
+
+<!-- L2 gateway -->
+<rect class="lyrhd" x="0" y="0" width="0" height="0"/>
+<rect class="bxk" x="18" y="130" width="884" height="58" rx="3"/>
+<text class="t" x="34" y="152" font-weight="600">API Gateway</text>
+<text class="ts" x="34" y="170">OIDC token verification · consent check · audit write · rate limit · schema validation</text>
+<text class="ts" x="700" y="152">OpenAPI 3.1</text>
+<text class="ts" x="700" y="170">Keycloak-issued JWT</text>
+
+<path class="ln" d="M460 188 L460 214"/>
+
+<!-- L3 serving -->
+<rect class="lyr" x="18" y="216" width="884" height="118" rx="3"/>
+<text class="lyrhd" x="30" y="234">SERVING LAYER — MATLAB Production Server on Kubernetes</text>
+<rect class="bx" x="32" y="246" width="150" height="74" rx="3"/>
+<text class="t" x="46" y="268">Ingress</text><text class="ts" x="46" y="284">TLS termination</text>
+<text class="ts" x="46" y="300">load balancer</text>
+<rect class="bx" x="200" y="246" width="128" height="74" rx="3"/>
+<text class="t" x="214" y="270">MPS pod</text><text class="ts mono" x="214" y="288">1 CPU · 2 GiB</text>
+<rect class="bx" x="340" y="246" width="128" height="74" rx="3"/>
+<text class="t" x="354" y="270">MPS pod</text><text class="ts mono" x="354" y="288">1 CPU · 2 GiB</text>
+<rect class="bx" x="480" y="246" width="128" height="74" rx="3"/>
+<text class="t" x="494" y="270">MPS pod</text><text class="ts mono" x="494" y="288">autoscaled</text>
+<rect class="bxk" x="626" y="246" width="262" height="74" rx="3"/>
+<text class="t" x="640" y="268" font-weight="600">netrasetu.ctf</text>
+<text class="ts" x="640" y="286">compiled once by Compiler SDK,</text>
+<text class="ts" x="640" y="302">mounted identically in every pod</text>
+
+<path class="ln" d="M460 334 L460 360"/>
+
+<!-- L4 algorithm core -->
+<rect class="lyr" x="18" y="362" width="884" height="132" rx="3"/>
+<text class="lyrhd" x="30" y="380">ALGORITHM CORE — MATLAB R2026a</text>
+<rect class="bx" x="32" y="392" width="132" height="44" rx="3"/><text class="t" x="44" y="419">Quality gate</text>
+<rect class="bx" x="176" y="392" width="132" height="44" rx="3"/><text class="t" x="188" y="419">Enhancement</text>
+<rect class="bx" x="320" y="392" width="132" height="44" rx="3"/><text class="t" x="332" y="419">Segmentation</text>
+<rect class="bx" x="464" y="392" width="132" height="44" rx="3"/><text class="t" x="476" y="419">Fusion grading</text>
+<rect class="bx" x="608" y="392" width="132" height="44" rx="3"/><text class="t" x="620" y="419">Calibration</text>
+<rect class="bxk" x="752" y="392" width="136" height="44" rx="3"/><text class="t" x="764" y="419">Explanation</text>
+<text class="ts" x="32" y="460">Image Processing · Computer Vision · Deep Learning · Medical Imaging · Statistics &amp; ML Toolbox</text>
+<text class="ts" x="32" y="478">Outputs: grade 0–4 · calibrated posterior · lesion evidence crops · Grad-CAM · PDF report · FHIR R4 bundle</text>
+
+<path class="ln" d="M460 494 L460 520"/>
+
+<!-- L5 platform -->
+<rect class="lyr" x="18" y="522" width="884" height="96" rx="3"/>
+<text class="lyrhd" x="30" y="540">PLATFORM SERVICES</text>
+<rect class="bx" x="32" y="552" width="160" height="52" rx="3"/>
+<text class="t" x="44" y="572">Keycloak</text><text class="ts" x="44" y="590">OIDC · 4 roles · TOTP</text>
+<rect class="bx" x="204" y="552" width="160" height="52" rx="3"/>
+<text class="t" x="216" y="572">PostgreSQL 17</text><text class="ts" x="216" y="590">metadata · FHIR · audit</text>
+<rect class="bx" x="376" y="552" width="160" height="52" rx="3"/>
+<text class="t" x="388" y="572">Object store</text><text class="ts" x="388" y="590">Garage · S3 Lock in prod</text>
+<rect class="bx" x="548" y="552" width="176" height="52" rx="3"/>
+<text class="t" x="560" y="572">Prometheus + Grafana</text><text class="ts" x="560" y="590">MPS emits natively</text>
+<rect class="bx" x="736" y="552" width="152" height="52" rx="3"/>
+<text class="t" x="748" y="572">ABDM / ABHA</text><text class="ts" x="748" y="590">identity · consent</text>
+
+<!-- edge branch -->
+<rect class="bxd" x="18" y="638" width="418" height="52" rx="3"/>
+<text class="t" x="32" y="658">Edge deployment — GPU Coder → NVIDIA Jetson Orin</text>
+<text class="ts" x="32" y="676">Same MATLAB source, second compilation target. Results sync; images stay in-district.</text>
+<path class="lnT" d="M227 638 L227 618 M227 618 L227 604" stroke-dasharray="4 3"/>
+<text class="ts" x="452" y="662" style="fill:#0E7C86">for PHCs with no usable uplink</text>
+</svg>
+</div>
+<figcaption><b>Figure 1 — System architecture.</b> Five layers plus an edge branch. The teal
+elements are the load-bearing ones: the gateway owns everything that is not mathematics, the
+CTF archive is compiled once and mounted identically in every pod, and the explanation stage
+is the product's differentiator. Note the edge path shares source with the cloud path — one
+algorithm, two compilation targets.</figcaption>
+</figure>
+
+<h3>Why the core stays in MATLAB</h3>
+<p>This is a MathWorks problem statement. Reimplementing the model in PyTorch and wrapping
+MATLAB around it is the fastest available way to lose. Every algorithmic decision lives inside
+MATLAB; the web layer is a thin, well-made client.</p>
+
+<h3>Why the gateway exists</h3>
+<p>MPS should do exactly one thing: evaluate the algorithm. ABHA authentication, the consent
+ledger, the audit chain, tokenised patient links and rate limiting all sit in the gateway,
+because none of them belong in MATLAB and all of them need to change faster than the model
+does.</p>
+</section>
+
+<!-- ══════════════ 5 ══════════════ -->
+<section id="s5">
+<h2><span class="n">Section 5</span>End-to-end screening flow</h2>
+<p class="lede">Five lanes, two loops. The retake loop is what makes the system work in a
+field camp; the override loop is what makes it improve.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 660" role="img" aria-label="Swimlane flow diagram of the screening process">
+<style>
+  .lane{fill:#fff;stroke:#DCE1E4;stroke-width:1}
+  .lane2{fill:#FAFBFB;stroke:#DCE1E4;stroke-width:1}
+  .lbl{font-size:10.5px;fill:#5E6B75}
+  .nd{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .ndk{fill:#E6F1F2;stroke:#0E7C86;stroke-width:1.4}
+  .nt{font-size:11.5px;fill:#12171C}
+  .ns{font-size:9.5px;fill:#5E6B75}
+  .fl{stroke:#5E6B75;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+  .flR{stroke:#B26B00;stroke-width:1.5;fill:none;marker-end:url(#arR);stroke-dasharray:5 3}
+  .flG{stroke:#1B7F4C;stroke-width:1.5;fill:none;marker-end:url(#arG)}
+  .flD{stroke:#B3261E;stroke-width:1.5;fill:none;marker-end:url(#arD)}
+</style>
+<defs>
+  <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#B26B00"/></marker>
+  <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1B7F4C"/></marker>
+  <marker id="arD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#B3261E"/></marker>
+</defs>
+
+<!-- lanes -->
+<rect class="lane"  x="8" y="8"   width="904" height="120"/>
+<rect class="lane2" x="8" y="128" width="904" height="150"/>
+<rect class="lane"  x="8" y="278" width="904" height="150"/>
+<rect class="lane2" x="8" y="428" width="904" height="118"/>
+<rect class="lane"  x="8" y="546" width="904" height="106"/>
+<line x1="152" y1="8" x2="152" y2="652" stroke="#DCE1E4"/>
+<text class="lbl" x="20" y="34">Screener</text><text class="lbl" x="20" y="50">(ASHA / technician)</text>
+<text class="lbl" x="20" y="154">Device</text><text class="lbl" x="20" y="170">(PWA + camera)</text>
+<text class="lbl" x="20" y="304">Cloud</text><text class="lbl" x="20" y="320">(gateway + MPS)</text>
+<text class="lbl" x="20" y="454">Ophthalmologist</text><text class="lbl" x="20" y="470">(district hub)</text>
+<text class="lbl" x="20" y="572">Patient</text><text class="lbl" x="20" y="588">(home)</text>
+
+<!-- lane 1 -->
+<rect class="nd" x="176" y="34" width="128" height="46" rx="3"/>
+<text class="nt" x="190" y="54">Scan ABHA QR</text><text class="ns" x="190" y="70">or minimal intake</text>
+<rect class="nd" x="330" y="34" width="128" height="46" rx="3"/>
+<text class="nt" x="344" y="54">Record consent</text><text class="ns" x="344" y="70">local language, hashed</text>
+<rect class="nd" x="484" y="34" width="128" height="46" rx="3"/>
+<text class="nt" x="498" y="54">Capture image</text><text class="ns" x="498" y="70">live quality ring</text>
+<rect class="nd" x="700" y="34" width="150" height="46" rx="3"/>
+<text class="nt" x="714" y="54">Hand slip + speak</text><text class="ns" x="714" y="70">decision, in Marathi</text>
+<path class="fl" d="M870 302 L870 57 L854 57" stroke-dasharray="4 3"/>
+<text class="ns" x="876" y="200">decision</text>
+<text class="ns" x="876" y="212">returned</text>
+
+<path class="fl" d="M304 57 L326 57"/><path class="fl" d="M458 57 L480 57"/>
+<path class="fl" d="M548 80 L548 152"/>
+
+<!-- lane 2 -->
+<rect class="nd" x="484" y="154" width="128" height="46" rx="3"/>
+<text class="nt" x="498" y="174">Quality gate</text><text class="ns" x="498" y="190">focus · illum · FOV</text>
+<path d="M676 177 l38 -26 l38 26 l-38 26 z" fill="#FBF3E6" stroke="#B26B00" stroke-width="1.3"/>
+<text class="ns" x="714" y="181" text-anchor="middle" style="fill:#B26B00">gradable?</text>
+<path class="fl" d="M612 177 L672 177"/>
+<rect class="nd" x="484" y="222" width="270" height="44" rx="3"/>
+<text class="nt" x="498" y="242">Retake guidance</text>
+<text class="ns" x="498" y="258">"Nose side too dark — move the light right"  ·  max 3 attempts</text>
+<path class="flR" d="M714 203 L714 214 L714 222"/>
+<path class="flR" d="M484 244 L470 244 L470 92 L500 92 L500 84" fill="none"/>
+<text class="ns" x="396" y="106" style="fill:#B26B00">retake loop</text>
+<rect class="nd" x="176" y="154" width="128" height="46" rx="3"/>
+<text class="nt" x="190" y="174">Queue offline</text><text class="ns" x="190" y="190">Dexie + Workbox</text>
+<path class="fl" d="M484 177 L308 177"/>
+<path class="fl" d="M240 200 L240 300"/>
+<text class="ns" x="248" y="248">sync when network returns</text>
+
+<!-- lane 3 -->
+<rect class="nd" x="176" y="302" width="140" height="48" rx="3"/>
+<text class="nt" x="190" y="322">Gateway</text><text class="ns" x="190" y="338">authN · consent · audit</text>
+<rect class="nd" x="340" y="302" width="140" height="48" rx="3"/>
+<text class="nt" x="354" y="322">Validate + store</text><text class="ns" x="354" y="338">pHash · SHA-256 · S3 store</text>
+<rect class="ndk" x="504" y="302" width="150" height="48" rx="3"/>
+<text class="nt" x="518" y="322" font-weight="600">MPS inference</text><text class="ns" x="518" y="338">grade · evidence · report</text>
+<path d="M700 326 l40 -26 l40 26 l-40 26 z" fill="#EAF4EE" stroke="#1B7F4C" stroke-width="1.3"/>
+<text class="ns" x="740" y="323" text-anchor="middle" style="fill:#1B7F4C">triage</text>
+<text class="ns" x="740" y="336" text-anchor="middle" style="fill:#1B7F4C">router</text>
+<path class="fl" d="M316 326 L336 326"/><path class="fl" d="M480 326 L500 326"/>
+<path class="fl" d="M654 326 L696 326"/>
+<rect class="nd" x="790" y="302" width="112" height="48" rx="3"/>
+<text class="nt" x="802" y="322">Auto-discharge</text><text class="ns" x="802" y="338">grade 0–1, high conf.</text>
+<path class="flG" d="M780 326 L786 326"/>
+<text class="ns" x="846" y="296" text-anchor="middle" style="fill:#1B7F4C">~71% of cases</text>
+
+<!-- lane 4 -->
+<path class="flD" d="M740 352 L740 380 L560 380 L560 452"/>
+<text class="ns" x="586" y="374" style="fill:#B3261E">referable or low confidence → human review</text>
+<rect class="ndk" x="440" y="454" width="240" height="54" rx="3"/>
+<text class="nt" x="454" y="474" font-weight="600">Reviewer Console — 21 s median</text>
+<text class="ns" x="454" y="490">Evidence Strip · posterior band · 1:1 zoom</text>
+<rect class="nd" x="200" y="454" width="200" height="54" rx="3"/>
+<text class="nt" x="214" y="474">Overturn + reason chip</text>
+<text class="ns" x="214" y="490">→ labelled training example</text>
+<path class="fl" d="M440 481 L406 481"/>
+<path class="flR" d="M300 454 L300 420 L578 420 L578 350" />
+<text class="ns" x="330" y="412" style="fill:#B26B00">active-learning loop · retrain trigger</text>
+<rect class="nd" x="716" y="454" width="186" height="54" rx="3"/>
+<text class="nt" x="730" y="474">Sign report</text><text class="ns" x="730" y="490">HPR ID → audit chain</text>
+<path class="fl" d="M680 481 L712 481"/>
+
+<!-- lane 5 -->
+<path class="fl" d="M808 508 L808 560"/>
+<rect class="nd" x="640" y="562" width="262" height="52" rx="3"/>
+<text class="nt" x="654" y="582">SMS link — signed, single-use, 72 h</text>
+<text class="ns" x="654" y="598">own retina, plain language, read aloud</text>
+<rect class="ndk" x="380" y="562" width="230" height="52" rx="3"/>
+<text class="nt" x="394" y="582" font-weight="600">Held appointment slot</text>
+<text class="ns" x="394" y="598">date, time, facility — not a phone number</text>
+<path class="fl" d="M636 588 L616 588"/>
+<rect class="nd" x="176" y="562" width="176" height="52" rx="3"/>
+<text class="nt" x="190" y="582">Attendance recorded</text>
+<text class="ns" x="190" y="598">closes the referral funnel</text>
+<path class="fl" d="M376 588 L356 588"/>
+</svg>
+</div>
+<figcaption><b>Figure 2 — End-to-end screening flow.</b> The amber dashed paths are the two
+loops that most implementations omit: the retake loop, which recovers images that would
+otherwise be discarded, and the active-learning loop, which turns grader disagreement into
+training data. The green path is the auto-discharge branch that produces the 71%
+ophthalmologist-hour saving. The flow does not end at "referred" — it ends at
+"attended."</figcaption>
+</figure>
+
+<h3>Decision logic for one screening</h3>
+<p>The swimlane shows who does what. This flowchart shows what the system decides, in order, for
+a single eye. Every terminal state is one of the three decision states from Section 14, or a
+human decision — there is no path that ends in "uncertain."</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 750" role="img" aria-label="Decision flowchart for a single screening">
+<style>
+  .fc-p{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .fc-d{fill:#fff;stroke:#2C363E;stroke-width:1.2}
+  .fc-t{font-size:11.5px;fill:#12171C}
+  .fc-s{font-size:9.8px;fill:#5E6B75}
+  .fc-y{font-size:9.6px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .fc-a{stroke:#5E6B75;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+  .fc-aw{stroke:#B26B00;stroke-width:1.4;fill:none;marker-end:url(#arR);stroke-dasharray:5 3}
+  .fc-ag{stroke:#1B7F4C;stroke-width:1.4;fill:none;marker-end:url(#arG)}
+  .fc-ar{stroke:#B3261E;stroke-width:1.4;fill:none;marker-end:url(#arD)}
+</style>
+
+<rect x="230" y="16" width="140" height="36" rx="18" fill="#12171C"/>
+<text x="300" y="38" text-anchor="middle" fill="#fff" font-size="11.5">Start screening</text>
+<path class="fc-a" d="M300 52 L300 74"/>
+
+<path class="fc-d" d="M300 76 L380 110 L300 144 L220 110 Z"/>
+<text class="fc-t" x="300" y="107" text-anchor="middle">Consent</text>
+<text class="fc-t" x="300" y="121" text-anchor="middle">given?</text>
+<path class="fc-a" d="M380 110 L472 110"/><text class="fc-y" x="404" y="103">no</text>
+<rect x="476" y="92" width="200" height="36" rx="18" fill="#fff" stroke="#7C8B98"/>
+<text class="fc-t" x="576" y="114" text-anchor="middle">Stop — record refusal</text>
+
+<path class="fc-a" d="M300 144 L300 170"/><text class="fc-y" x="308" y="161">yes</text>
+<rect class="fc-p" x="210" y="172" width="180" height="44" rx="3"/>
+<text class="fc-t" x="300" y="191" text-anchor="middle">Capture image</text>
+<text class="fc-s" x="300" y="207" text-anchor="middle">live quality ring</text>
+<path class="fc-a" d="M300 216 L300 240"/>
+
+<path class="fc-d" d="M300 242 L380 276 L300 310 L220 276 Z"/>
+<text class="fc-t" x="300" y="280" text-anchor="middle">Gradable?</text>
+<path class="fc-a" d="M380 276 L472 276"/><text class="fc-y" x="404" y="269">no</text>
+
+<path class="fc-d" d="M556 242 L636 276 L556 310 L476 276 Z"/>
+<text class="fc-t" x="556" y="273" text-anchor="middle">Attempt</text>
+<text class="fc-t" x="556" y="287" text-anchor="middle">&lt; 3?</text>
+<path class="fc-aw" d="M556 242 L556 220"/><text class="fc-y" x="564" y="235" style="fill:#B26B00">yes</text>
+<rect x="466" y="172" width="180" height="44" rx="3" fill="#FBF3E6" stroke="#B26B00"/>
+<text class="fc-t" x="556" y="191" text-anchor="middle">Speak retake guidance</text>
+<text class="fc-s" x="556" y="207" text-anchor="middle">"move the light right"</text>
+<path class="fc-aw" d="M466 194 L394 194"/>
+<path class="fc-a" d="M636 276 L712 276"/><text class="fc-y" x="652" y="269">no</text>
+<rect x="716" y="258" width="190" height="36" rx="18" fill="#FBF3E6" stroke="#B26B00"/>
+<text class="fc-t" x="811" y="280" text-anchor="middle">Refer for dilated exam</text>
+
+<path class="fc-a" d="M300 310 L300 336"/><text class="fc-y" x="308" y="327">yes</text>
+<path class="fc-d" d="M300 338 L380 372 L300 406 L220 372 Z"/>
+<text class="fc-t" x="300" y="369" text-anchor="middle">Seen in last</text>
+<text class="fc-t" x="300" y="383" text-anchor="middle">30 days?</text>
+<path class="fc-a" d="M380 372 L476 372"/><text class="fc-y" x="404" y="365">yes</text>
+<rect class="fc-p" x="480" y="350" width="200" height="44" rx="3"/>
+<text class="fc-t" x="580" y="369" text-anchor="middle">Flag repeat screening</text>
+<text class="fc-s" x="580" y="385" text-anchor="middle">pHash match, link prior study</text>
+<path class="fc-a" d="M680 372 L770 372 L770 640 L682 640"/>
+
+<path class="fc-a" d="M300 406 L300 430"/><text class="fc-y" x="308" y="421">no</text>
+<rect class="fc-p" x="200" y="434" width="200" height="44" rx="3"/>
+<text class="fc-t" x="300" y="453" text-anchor="middle">Grade and calibrate</text>
+<text class="fc-s" x="300" y="469" text-anchor="middle">evidence crops + ICDR match</text>
+<path class="fc-a" d="M300 478 L300 502"/>
+
+<path class="fc-d" d="M300 506 L390 540 L300 574 L210 540 Z"/>
+<text class="fc-t" x="300" y="537" text-anchor="middle">p(referable) ≥</text>
+<text class="fc-t" x="300" y="551" text-anchor="middle">threshold?</text>
+<path class="fc-ar" d="M390 540 L476 540"/><text class="fc-y" x="410" y="533" style="fill:#B3261E">yes</text>
+<rect x="480" y="518" width="200" height="44" rx="3" fill="#FBECEB" stroke="#B3261E"/>
+<text x="580" y="537" text-anchor="middle" font-size="11.5" font-weight="600" fill="#B3261E">REFER</text>
+<text class="fc-s" x="580" y="553" text-anchor="middle">see an eye doctor ≤ 4 weeks</text>
+<path class="fc-ar" d="M580 562 L580 614"/>
+
+<path class="fc-a" d="M300 574 L300 602"/><text class="fc-y" x="308" y="593">no</text>
+<path class="fc-d" d="M300 606 L390 640 L300 674 L210 640 Z"/>
+<text class="fc-t" x="300" y="637" text-anchor="middle">Grade ≤ 1 and</text>
+<text class="fc-t" x="300" y="651" text-anchor="middle">confident?</text>
+<path class="fc-ag" d="M210 640 L190 640"/><text class="fc-y" x="190" y="630" style="fill:#1B7F4C">yes</text>
+<rect x="14" y="620" width="172" height="40" rx="20" fill="#EAF4EE" stroke="#1B7F4C"/>
+<text x="100" y="637" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1B7F4C">ROUTINE</text>
+<text class="fc-s" x="100" y="651" text-anchor="middle">rescreen in 12 months</text>
+<path class="fc-a" d="M390 640 L476 640"/><text class="fc-y" x="410" y="633">no</text>
+
+<rect x="480" y="618" width="200" height="44" rx="3" fill="#E6F1F2" stroke="#0E7C86" stroke-width="1.4"/>
+<text class="fc-t" x="580" y="637" text-anchor="middle" font-weight="600">Reviewer decides</text>
+<text class="fc-s" x="580" y="653" text-anchor="middle">agree · overturn · ungradeable</text>
+<path class="fc-a" d="M580 662 L580 696"/>
+
+<path class="fc-ag" d="M100 660 L100 719 L456 719"/>
+<text class="fc-y" x="112" y="712" style="fill:#1B7F4C">report still sent</text>
+<rect x="460" y="700" width="240" height="38" rx="19" fill="#12171C"/>
+<text x="580" y="723" text-anchor="middle" fill="#fff" font-size="11.5">Signed report → patient link</text>
+</svg>
+</div>
+<figcaption><b>Figure 2b — Decision logic flowchart.</b> Two design choices are visible here.
+A repeat screening is never silently dropped or silently re-graded — it is routed to a human with
+the prior study attached. And the threshold diamond comes <em>before</em> the confidence diamond:
+an eye above the referral threshold is referred regardless of confidence, because a missed
+referable case costs more than a reviewer's 21 seconds.</figcaption>
+</figure>
+</section>
+
+<!-- ══════════════ 6 ══════════════ -->
+<section id="s6">
+<h2><span class="n">Section 6</span>Algorithm pipeline</h2>
+<p class="lede">Two streams into one fusion model. The architecture generates the required
+ablation table by construction.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 540" role="img" aria-label="Dataflow diagram of the MATLAB algorithm pipeline">
+<style>
+  .st{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .stk{fill:#E6F1F2;stroke:#0E7C86;stroke-width:1.4}
+  .stw{fill:#FBF3E6;stroke:#B26B00;stroke-width:1.3}
+  .h{font-size:12px;fill:#12171C;font-weight:600}
+  .b{font-size:10.5px;fill:#5E6B75}
+  .m{font-size:9.5px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .e{stroke:#5E6B75;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+  .ew{stroke:#B26B00;stroke-width:1.4;fill:none;marker-end:url(#arR);stroke-dasharray:5 3}
+</style>
+
+<rect class="st" x="14" y="26" width="126" height="56" rx="3"/>
+<text class="h" x="26" y="48">Fundus image</text><text class="m" x="26" y="66">4288 × 2848</text>
+
+<path class="e" d="M140 54 L172 54"/>
+<rect class="stw" x="172" y="16" width="150" height="76" rx="3"/>
+<text class="h" x="184" y="38">1 · Quality gate</text>
+<text class="b" x="184" y="55">Laplacian variance in</text>
+<text class="b" x="184" y="70">arcade · illumination CV</text>
+<text class="b" x="184" y="85">· FOV area · pHash</text>
+
+<rect class="stw" x="352" y="16" width="164" height="76" rx="3"/>
+<text class="h" x="364" y="38">reject → guidance</text>
+<text class="b" x="364" y="55">failure mode mapped to a</text>
+<text class="b" x="364" y="70">localised instruction, not</text>
+<text class="b" x="364" y="85">to the word "ungradeable"</text>
+<path class="ew" d="M322 54 L348 54"/>
+
+<path class="e" d="M247 92 L247 122"/>
+<text class="m" x="255" y="112">accept / enhance</text>
+
+<rect class="st" x="172" y="124" width="150" height="66" rx="3"/>
+<text class="h" x="184" y="146">2 · Enhancement</text>
+<text class="b" x="184" y="163">FOV crop → Ben Graham</text>
+<text class="b" x="184" y="178">normalisation → CLAHE</text>
+
+<path class="e" d="M322 157 L354 157"/>
+
+<rect class="st" x="354" y="112" width="182" height="90" rx="3"/>
+<text class="h" x="366" y="134">3 · Structures &amp; lesions</text>
+<text class="b" x="366" y="151">optic disc · fovea · vessel U-Net</text>
+<text class="b" x="366" y="166">microaneurysms (rotating linear</text>
+<text class="b" x="366" y="181">top-hat → CNN → Gaussian fit)</text>
+<text class="b" x="366" y="196">haemorrhage · exudate · NV proxy</text>
+
+<!-- streams -->
+<path class="e" d="M536 138 L590 138 L590 112"/>
+<path class="e" d="M536 176 L590 176 L590 202"/>
+<path class="e" d="M247 190 L247 236 L590 236 L590 262"/>
+
+<rect class="st" x="590" y="62" width="180" height="50" rx="3"/>
+<text class="h" x="602" y="82">Stream A — CNN</text>
+<text class="b" x="602" y="99">ordinal regression head, 5-vector</text>
+
+<rect class="st" x="590" y="202" width="180" height="50" rx="3"/>
+<text class="h" x="602" y="222">Stream B — lesion features</text>
+<text class="b" x="602" y="239">~24-dim, ICDR-aligned</text>
+
+<rect class="st" x="590" y="262" width="180" height="46" rx="3"/>
+<text class="h" x="602" y="282">Stream C — quality</text>
+<text class="b" x="602" y="298">score + FOV metrics</text>
+
+<path class="e" d="M770 87 L810 87 L810 160"/>
+<path class="e" d="M770 227 L810 227 L810 190"/>
+<path class="e" d="M770 285 L790 285 L790 190"/>
+
+<rect class="stk" x="740" y="160" width="166" height="58" rx="3"/>
+<text class="h" x="752" y="182">4 · Fusion</text>
+<text class="b" x="752" y="199"><tspan class="m">fitcensemble</tspan> gradient</text>
+<text class="b" x="752" y="213">boosting → grade 0–4</text>
+
+<path class="e" d="M823 218 L823 254"/>
+<rect class="st" x="740" y="256" width="166" height="56" rx="3"/>
+<text class="h" x="752" y="278">5 · Calibration</text>
+<text class="b" x="752" y="295">temperature scaling on</text>
+<text class="b" x="752" y="308">validation → ECE, posterior</text>
+
+<path class="e" d="M823 312 L823 348 L560 348 L560 372"/>
+
+<!-- explanation row -->
+<rect class="stk" x="180" y="372" width="760" height="0"/>
+<rect class="stk" x="14" y="372" width="892" height="96" rx="3"/>
+<text class="h" x="28" y="394">6 · Explanation and artefacts</text>
+<rect class="st" x="28" y="404" width="200" height="50" rx="3"/>
+<text class="b" x="40" y="424" style="fill:#12171C">Evidence Strip</text>
+<text class="b" x="40" y="440">native-resolution lesion crops</text>
+<rect class="st" x="240" y="404" width="200" height="50" rx="3"/>
+<text class="b" x="252" y="424" style="fill:#12171C">ICDR criterion match</text>
+<text class="b" x="252" y="440">"14 haemorrhages, 3 quadrants"</text>
+<rect class="st" x="452" y="404" width="200" height="50" rx="3"/>
+<text class="b" x="464" y="424" style="fill:#12171C">Grad-CAM + LLP score</text>
+<text class="b" x="464" y="440">intermediate layer, quantified</text>
+<rect class="st" x="664" y="404" width="228" height="50" rx="3"/>
+<text class="b" x="676" y="424" style="fill:#12171C">PDF report + FHIR R4 bundle</text>
+<text class="b" x="676" y="440">Report Generator · NRCeS profile</text>
+
+<!-- footnote -->
+<text class="m" x="14" y="496">Ablation rows generated by construction:  A-only  ·  B-only  ·  A+B  ·  A+B+quality gating</text>
+<text class="m" x="14" y="514">Metrics: QWK (5-class) · sensitivity/specificity at frozen threshold with bootstrap CI · external validation on held-out Messidor-2</text>
+</svg>
+</div>
+<figcaption><b>Figure 3 — Algorithm pipeline.</b> Three streams converge on a small
+gradient-boosted fusion model, which is what makes the required "beats any single technique"
+ablation fall out of the architecture rather than needing to be constructed afterwards. The
+amber branch is the reject path — the only part of the pipeline that talks back to the person
+holding the camera.</figcaption>
+</figure>
+
+<h3>Three decisions that carry most of the performance</h3>
+<p><strong>Ordinal regression, not 5-class softmax.</strong> DR severity is ordered;
+misgrading 0→4 is not the same error as 3→4. Train a regression head with MSE loss, then
+optimise four cut-points on validation to maximise quadratic weighted kappa. Two lines
+different from the naive approach, and the single highest-return modelling choice available.</p>
+
+<p><strong>Grad-CAM from an intermediate layer.</strong> At ResNet-50's final conv layer the
+map is 7×7. Upsampled over a 4288-pixel image, one cell spans roughly 600 pixels — about 40×
+the diameter of a microaneurysm. Say this arithmetic out loud in the pitch; it is why the
+Evidence Strip exists.</p>
+
+<p><strong>Quantified explanation.</strong> IDRiD ships pixel-level lesion masks. Use them to
+compute the fraction of Grad-CAM activation mass falling inside true lesion masks, and the
+pointing-game score. "Clinically useful explanation" becomes a number with a confidence
+interval instead of a claim. Almost no competing team will do this.</p>
+</section>
+
+<!-- ══════════════ 7 ══════════════ -->
+<section id="s7">
+<h2><span class="n">Section 7</span>Capacity model</h2>
+<p class="lede">The screening pipeline is a queueing problem, not a signal-flow problem.
+Model it in SimEvents, and give the output to someone who controls a budget.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 400" role="img" aria-label="SimEvents discrete-event model of the screening programme">
+<style>
+  .sv{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .svk{fill:#E6F1F2;stroke:#0E7C86;stroke-width:1.4}
+  .svr{fill:#FFF;stroke:#7C8B98;stroke-width:1;stroke-dasharray:4 3}
+  .qh{font-size:11.5px;fill:#12171C;font-weight:600}
+  .qb{font-size:10px;fill:#5E6B75}
+  .qm{font-size:9.5px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .ev{stroke:#5E6B75;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+  .evw{stroke:#B26B00;stroke-width:1.4;fill:none;marker-end:url(#arR);stroke-dasharray:5 3}
+  .evg{stroke:#1B7F4C;stroke-width:1.4;fill:none;marker-end:url(#arG)}
+</style>
+
+<rect class="sv" x="14" y="86" width="112" height="56" rx="3"/>
+<text class="qh" x="26" y="108">Arrivals</text><text class="qm" x="26" y="126">Poisson, λ per PHC</text>
+
+<path class="ev" d="M126 114 L156 114"/>
+<rect class="sv" x="156" y="86" width="96" height="56" rx="3"/>
+<text class="qh" x="168" y="108">Queue</text><text class="qm" x="168" y="126">FIFO</text>
+
+<path class="ev" d="M252 114 L282 114"/>
+<rect class="sv" x="282" y="80" width="126" height="68" rx="3"/>
+<text class="qh" x="294" y="102">Capture +</text><text class="qh" x="294" y="118">quality server</text>
+<text class="qm" x="294" y="136">rework 10–15%</text>
+
+<path class="evw" d="M345 148 L345 176 L219 176 L219 142"/>
+<text class="qb" x="234" y="192" style="fill:#B26B00">retake loop — rate measured, not assumed</text>
+
+<path class="ev" d="M408 114 L438 114"/>
+<rect class="sv" x="438" y="80" width="130" height="68" rx="3"/>
+<text class="qh" x="450" y="102">Transmission</text>
+<text class="qb" x="450" y="119">delay = size ÷ bandwidth</text>
+<text class="qm" x="450" y="136">rural 4G variability</text>
+
+<path class="ev" d="M568 114 L598 114"/>
+<rect class="svk" x="598" y="80" width="130" height="68" rx="3"/>
+<text class="qh" x="610" y="102">Inference server</text>
+<text class="qb" x="610" y="119">service time measured</text>
+<text class="qm" x="610" y="136">from the real pipeline</text>
+
+<path class="ev" d="M728 114 L758 114"/>
+<path d="M800 114 l40 -26 l40 26 l-40 26 z" fill="#EAF4EE" stroke="#1B7F4C" stroke-width="1.3"/>
+<text class="qb" x="818" y="110" style="fill:#1B7F4C">triage</text>
+<text class="qb" x="812" y="124" style="fill:#1B7F4C">router</text>
+
+<path class="evg" d="M840 88 L840 56 L700 56"/>
+<rect class="sv" x="560" y="34" width="140" height="44" rx="3"/>
+<text class="qh" x="572" y="54">Auto-discharge</text>
+<text class="qm" x="572" y="70">grade 0–1, high conf.</text>
+
+<path class="ev" d="M840 140 L840 180 L640 180"/>
+<rect class="sv" x="500" y="158" width="140" height="46" rx="3"/>
+<text class="qh" x="512" y="178">Review queue</text>
+<text class="qm" x="512" y="196">sorted by decision value</text>
+
+<path class="ev" d="M500 181 L448 181"/>
+<rect class="svk" x="300" y="158" width="148" height="46" rx="3"/>
+<text class="qh" x="312" y="178">Grader server</text>
+<text class="qm" x="312" y="196">30 s service time</text>
+
+<rect class="svr" x="300" y="222" width="148" height="44" rx="3"/>
+<text class="qb" x="312" y="242" style="fill:#12171C">Resource Pool</text>
+<text class="qm" x="312" y="258">N ophthalmologists</text>
+<path class="ev" d="M374 222 L374 206" style="marker-end:none" stroke-dasharray="3 3"/>
+
+<path class="ev" d="M300 181 L248 181"/>
+<rect class="sv" x="140" y="158" width="108" height="46" rx="3"/>
+<text class="qh" x="152" y="184">Sink</text>
+
+<!-- outputs -->
+<line x1="14" y1="290" x2="906" y2="290" stroke="#DCE1E4"/>
+<text class="qh" x="14" y="314">Swept outputs</text>
+<text class="qb" x="14" y="334">Contour of 95th-percentile turnaround over graders × bandwidth, with 4 h and 24 h isolines drawn</text>
+<text class="qb" x="14" y="352">Headline: ophthalmologist-hours saved per year by auto-discharge</text>
+<text class="qm" x="14" y="378">100,000 patients ÷ ~250 working days ≈ 400 patients/day  →  2 graders + 2 Mbps sustain it at P95 &lt; 4 h</text>
+</svg>
+</div>
+<figcaption><b>Figure 4 — SimEvents capacity model.</b> Entity Queue, Entity Server and
+Resource Pool blocks map directly onto the vocabulary of a district programme. Two parameters
+are measured rather than guessed: the rework rate comes from your quality gate's own rejection
+statistics, and inference service time comes from the real pipeline. That is what separates
+this from a plausible-looking simulation.</figcaption>
+</figure>
+
+<p>Lead your final slide with the ophthalmologist-hours figure, not the turnaround time. It is
+the entire policy case for the project.</p>
+</section>
+
+<!-- ══════════════ 8 ══════════════ -->
+<section id="s8">
+<h2><span class="n">Section 8</span>Deployment and scaling</h2>
+<p class="lede">MATLAB Production Server on Kubernetes. One compiled archive, many channels.</p>
+
+<p>MPS is the multi-channel answer because client libraries exist for Python, C/C++, .NET,
+Java and a range of enterprise applications including web apps and Excel add-ins, enabling
+integration across desktop, web, mobile and enterprise systems. Your field PWA, reviewer
+console, patient link, an eSanjeevani hook and a WhatsApp bot all call the same endpoint. You
+compile <code>netrasetu_analyze</code> once and never port it.</p>
+
+<p>It scales because the server is stateless: vertically by adding cores and memory, or
+horizontally by adding servers behind a load balancer. MathWorks ships a supported Kubernetes
+reference architecture with Docker images and Helm charts for EKS, AKS, GKE, OpenShift or
+on-premises, where the Ingress controller doubles as the load balancer and is the preferred way
+to expose the service in production. Containers beat VMs here because screening load is spiky —
+camp days, not steady state.</p>
+
+<table>
+<thead><tr><th style="width:30%">Concern</th><th>Decision</th></tr></thead>
+<tbody>
+<tr><td>Long-running requests</td><td>Full inference plus Grad-CAM plus report generation is
+not a 200 ms call. Use MPS asynchronous execution; the client must carry the
+<code>Set-Cookie</code> value on subsequent requests to land on the same server. This also
+gives the field app the POST-then-poll behaviour it needs when a phone drops off 4G
+mid-upload.</td></tr>
+<tr><td>Sizing</td><td>Each MPS container needs at least 1 CPU core and 2 GiB RAM, on
+Kubernetes 1.24 or later. Feed those numbers into the SimEvents model rather than guessing
+service capacity.</td></tr>
+<tr><td>Licensing</td><td>Requires a <em>concurrent</em> licence tied to a network licence
+manager that must be reachable from the cluster but must not be installed inside it, plus
+access to the MathWorks container registry. State this as a known procurement dependency —
+knowing where the licence manager sits signals you have read the deployment docs.</td></tr>
+<tr><td>Prototype substitute</td><td>MATLAB Engine API for Python behind FastAPI. Ships with
+MATLAB, no extra licence, runs on one laptop, gives live inference during a demo instead of
+cached JSON.</td></tr>
+<tr><td>Not for public channels</td><td>MATLAB Web App Server hosts App Designer apps and is
+built for a trusted intranet. Keep it for the District Twin, which genuinely is an internal NHM
+tool. Everything public goes through MPS behind the gateway.</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- ══════════════ 9 ══════════════ -->
+<section id="s9">
+<h2><span class="n">Section 9</span>Identity and access</h2>
+<p class="lede">Three authenticated roles, one unauthenticated path, and a hard separation
+between grading and administering.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 470" role="img" aria-label="Sequence diagram of authentication, screening and patient access">
+<style>
+  .act{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .actk{fill:#E6F1F2;stroke:#0E7C86;stroke-width:1.4}
+  .an{font-size:10.5px;fill:#12171C}
+  .ll{stroke:#DCE1E4;stroke-width:1;stroke-dasharray:3 4}
+  .msg{stroke:#5E6B75;stroke-width:1.2;fill:none;marker-end:url(#ar)}
+  .msgk{stroke:#0E7C86;stroke-width:1.4;fill:none;marker-end:url(#arT)}
+  .mt{font-size:9.8px;fill:#2C363E}
+  .mm{font-size:9px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .box{fill:#FBF3E6;stroke:#B26B00;stroke-width:1;opacity:.55}
+</style>
+
+<rect class="act"  x="14"  y="14" width="112" height="34" rx="3"/><text class="an" x="26" y="36">Field device</text>
+<rect class="act"  x="160" y="14" width="104" height="34" rx="3"/><text class="an" x="172" y="36">Keycloak</text>
+<rect class="actk" x="298" y="14" width="104" height="34" rx="3"/><text class="an" x="310" y="36">Gateway</text>
+<rect class="act"  x="436" y="14" width="104" height="34" rx="3"/><text class="an" x="448" y="36">Object store</text>
+<rect class="act"  x="574" y="14" width="104" height="34" rx="3"/><text class="an" x="586" y="36">MPS</text>
+<rect class="act"  x="712" y="14" width="104" height="34" rx="3"/><text class="an" x="724" y="36">PostgreSQL</text>
+<rect class="act"  x="838" y="14" width="70"  height="34" rx="3"/><text class="an" x="848" y="36">Patient</text>
+
+<line class="ll" x1="70"  y1="48" x2="70"  y2="440"/>
+<line class="ll" x1="212" y1="48" x2="212" y2="440"/>
+<line class="ll" x1="350" y1="48" x2="350" y2="440"/>
+<line class="ll" x1="488" y1="48" x2="488" y2="440"/>
+<line class="ll" x1="626" y1="48" x2="626" y2="440"/>
+<line class="ll" x1="764" y1="48" x2="764" y2="440"/>
+<line class="ll" x1="873" y1="48" x2="873" y2="440"/>
+
+<path class="msg" d="M70 76 L206 76"/>
+<text class="mt" x="82" y="70">device credential + PIN</text>
+<path class="msg" d="M212 102 L76 102"/>
+<text class="mm" x="82" y="96">JWT · role=screener · facility=ambegaon · 15 min</text>
+
+<rect class="box" x="60" y="118" width="720" height="128" rx="3"/>
+<text class="mm" x="70" y="134" style="fill:#B26B00">per screening</text>
+
+<path class="msg" d="M70 156 L344 156"/>
+<text class="mt" x="86" y="150">POST /study — image + consent artefact</text>
+<path class="msg" d="M350 178 L758 178"/>
+<text class="mt" x="366" y="172">write consent row + audit entry (prev_hash → SHA-256 chain)</text>
+<path class="msg" d="M350 200 L482 200"/>
+<text class="mt" x="362" y="194">store raw image + SHA-256</text>
+<path class="msgk" d="M350 222 L620 222"/>
+<text class="mt" x="366" y="216">invoke netrasetu_analyze (async, Set-Cookie affinity)</text>
+<path class="msg" d="M626 244 L356 244"/>
+<text class="mm" x="372" y="238">grade · posterior · evidence paths · report · FHIR</text>
+
+<path class="msg" d="M350 278 L758 278"/>
+<text class="mt" x="366" y="272">persist result with model_ver — answers "which model graded this patient"</text>
+
+<rect class="box" x="330" y="298" width="456" height="72" rx="3"/>
+<text class="mm" x="340" y="314" style="fill:#B26B00">grader review — separate session, TOTP required, identity linked to HPR ID</text>
+<path class="msg" d="M350 340 L758 340"/>
+<text class="mt" x="366" y="334">decision + reason chip → review table + audit chain</text>
+<path class="msg" d="M350 362 L482 362"/>
+<text class="mt" x="362" y="356">presigned tile URLs</text>
+
+<path class="msg" d="M350 404 L867 404"/>
+<text class="mt" x="380" y="398">SMS: signed single-use token, 72 h expiry, bound to study ID + phone hash</text>
+<path class="msg" d="M873 428 L356 428"/>
+<text class="mm" x="392" y="422">GET /r/{token} — no account, no password, no session persisted</text>
+</svg>
+</div>
+<figcaption><b>Figure 5 — Authentication and consent sequence.</b> Note what is absent: the
+patient never authenticates. The amber regions mark the two places where a hash-chained audit
+entry is mandatory. Large images never transit the API layer — the console fetches tiles
+directly from object storage via presigned URLs.</figcaption>
+</figure>
+
+<table>
+<thead><tr><th style="width:20%">Role</th><th style="width:34%">Authentication</th><th>Authorisation boundary</th></tr></thead>
+<tbody>
+<tr><td>Screener</td><td>Facility-issued credential bound to a registered device, plus a
+6-digit PIN. Enrolled by the PHC admin — never self-signup.</td>
+<td>Capture, own queue, print slips. Cannot see other facilities' grades or export images.</td></tr>
+<tr><td>Grader</td><td>Keycloak with mandatory TOTP second factor. Identity linked to their
+Health Professional Registry ID.</td>
+<td>Reviewer Console for their district. Every decision written to the audit chain under their
+HPR ID.</td></tr>
+<tr><td>Programme admin</td><td>Keycloak with TOTP, plus a named approver for destructive
+actions.</td><td>Admin Console, audit search, operator enrolment. <strong>Cannot
+grade.</strong></td></tr>
+<tr><td>Patient</td><td>No account. Signed, single-use, 72-hour link by SMS.</td>
+<td>Their own report only. Token bound to one study ID and one phone-number hash.</td></tr>
+</tbody>
+</table>
+
+<p>Two rules worth saying out loud in the pitch: a second factor is mandatory for anyone who
+can change a clinical grade, and no role can both grade and administer. Separation of duties is
+what makes an audit trail meaningful rather than decorative.</p>
+
+<p>Keycloak is the pick because MPS supports certificate- and token-based authentication with
+OAuth 2.0 access control, and MATLAB Web App Server supports OIDC and LDAP. One realm secures
+the API layer and the District Twin with the same tokens, and self-hosting keeps identity data
+in-country.</p>
+</section>
+
+<!-- ══════════════ 10 ══════════════ -->
+<section id="s10">
+<h2><span class="n">Section 10</span>Data architecture</h2>
+<p class="lede">Pixels never enter the relational store. At 15–30 MB per image and 100,000
+screenings a year, that is roughly 3 TB annually.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 500" role="img" aria-label="Entity relationship diagram and object storage layout">
+<style>
+  .tb{fill:#fff;stroke:#C6CFD5;stroke-width:1}
+  .tbk{fill:#fff;stroke:#0E7C86;stroke-width:1.5}
+  .th{font-size:11.5px;fill:#12171C;font-weight:600}
+  .tf{font-size:9.6px;fill:#2C363E;font-family:'IBM Plex Mono',monospace}
+  .tn{font-size:9.2px;fill:#5E6B75}
+  .rel{stroke:#7C8B98;stroke-width:1.2;fill:none}
+  .hdr{fill:#F7F8F8}
+</style>
+
+<!-- patient -->
+<rect class="tb" x="14" y="20" width="188" height="106" rx="3"/>
+<rect class="hdr" x="15" y="21" width="186" height="24"/>
+<text class="th" x="26" y="38">patient</text>
+<text class="tf" x="26" y="60">id            uuid pk</text>
+<text class="tf" x="26" y="76">abha_hash     bytea</text>
+<text class="tf" x="26" y="92">facility_id   fk  ← RLS key</text>
+<text class="tf" x="26" y="108">phone_hash    bytea</text>
+<text class="tn" x="26" y="122">pgcrypto on identifiers</text>
+
+<!-- study -->
+<rect class="tbk" x="242" y="20" width="200" height="122" rx="3"/>
+<rect class="hdr" x="243" y="21" width="198" height="24"/>
+<text class="th" x="254" y="38">study</text>
+<text class="tf" x="254" y="60">id            uuid pk</text>
+<text class="tf" x="254" y="76">patient_id    fk</text>
+<text class="tf" x="254" y="92">laterality    OD | OS</text>
+<text class="tf" x="254" y="108">sha256        bytea</text>
+<text class="tf" x="254" y="124">phash         bigint  ← dedupe</text>
+<text class="tf" x="254" y="138">device_id     fk</text>
+
+<!-- result -->
+<rect class="tbk" x="482" y="20" width="204" height="122" rx="3"/>
+<rect class="hdr" x="483" y="21" width="202" height="24"/>
+<text class="th" x="494" y="38">result</text>
+<text class="tf" x="494" y="60">study_id      fk</text>
+<text class="tf" x="494" y="76">grade         0–4</text>
+<text class="tf" x="494" y="92">posterior     real[5]</text>
+<text class="tf" x="494" y="108">p_referable   real</text>
+<text class="tf" x="494" y="124">llp           real</text>
+<text class="tf" x="494" y="138">model_ver     text  ← required</text>
+
+<!-- review -->
+<rect class="tb" x="726" y="20" width="180" height="122" rx="3"/>
+<rect class="hdr" x="727" y="21" width="178" height="24"/>
+<text class="th" x="738" y="38">review</text>
+<text class="tf" x="738" y="60">study_id     fk</text>
+<text class="tf" x="738" y="76">grader_hpr   text</text>
+<text class="tf" x="738" y="92">decision     enum</text>
+<text class="tf" x="738" y="108">reason_chip  enum</text>
+<text class="tf" x="738" y="124">elapsed_ms   int</text>
+
+<path class="rel" d="M202 70 L242 70"/><circle cx="238" cy="70" r="3" fill="#7C8B98"/>
+<path class="rel" d="M442 70 L482 70"/><circle cx="478" cy="70" r="3" fill="#7C8B98"/>
+<path class="rel" d="M686 70 L726 70"/><circle cx="722" cy="70" r="3" fill="#7C8B98"/>
+
+<!-- consent -->
+<rect class="tb" x="14" y="164" width="222" height="112" rx="3"/>
+<rect class="hdr" x="15" y="165" width="220" height="24"/>
+<text class="th" x="26" y="182">consent</text>
+<text class="tf" x="26" y="204">patient_id     fk</text>
+<text class="tf" x="26" y="220">purpose        text</text>
+<text class="tf" x="26" y="236">notice_hash    bytea</text>
+<text class="tf" x="26" y="252">language       text</text>
+<text class="tf" x="26" y="268">granted_at / withdrawn_at</text>
+<path class="rel" d="M108 164 L108 126"/>
+
+<!-- audit -->
+<rect class="tbk" x="266" y="164" width="222" height="112" rx="3"/>
+<rect class="hdr" x="267" y="165" width="220" height="24"/>
+<text class="th" x="278" y="182">audit</text>
+<text class="tf" x="278" y="204">seq          bigserial</text>
+<text class="tf" x="278" y="220">actor        text</text>
+<text class="tf" x="278" y="236">action       text</text>
+<text class="tf" x="278" y="252">prev_hash    bytea</text>
+<text class="tf" x="278" y="268">hash         bytea ← SHA-256 chain</text>
+
+<!-- fhir -->
+<rect class="tb" x="518" y="164" width="222" height="112" rx="3"/>
+<rect class="hdr" x="519" y="165" width="220" height="24"/>
+<text class="th" x="530" y="182">fhir_bundle</text>
+<text class="tf" x="530" y="204">study_id     fk</text>
+<text class="tf" x="530" y="220">bundle       jsonb</text>
+<text class="tf" x="530" y="236">profile      NRCeS R4</text>
+<text class="tn" x="530" y="256">JSONB removes the need for a</text>
+<text class="tn" x="530" y="270">second document database</text>
+<path class="rel" d="M584 164 L584 142"/>
+
+<!-- object store -->
+<line x1="14" y1="306" x2="906" y2="306" stroke="#DCE1E4"/>
+<text class="th" x="14" y="330">Object store — Garage v2.3 (prototype) · Amazon S3 with Object Lock, ap-south-1 Mumbai (production)</text>
+<rect class="tb" x="14" y="342" width="172" height="52" rx="3"/>
+<text class="tf" x="26" y="362">raw/{studyId}.jpg</text><text class="tn" x="26" y="380">original · immutable</text>
+<rect class="tb" x="198" y="342" width="172" height="52" rx="3"/>
+<text class="tf" x="210" y="362">enh/{studyId}.png</text><text class="tn" x="210" y="380">enhanced</text>
+<rect class="tb" x="382" y="342" width="172" height="52" rx="3"/>
+<text class="tf" x="394" y="362">dzi/{studyId}/</text><text class="tn" x="394" y="380">OpenSeadragon tiles</text>
+<rect class="tb" x="566" y="342" width="172" height="52" rx="3"/>
+<text class="tf" x="578" y="362">ev/{studyId}/*.png</text><text class="tn" x="578" y="380">evidence crops</text>
+<rect class="tb" x="750" y="342" width="156" height="52" rx="3"/>
+<text class="tf" x="762" y="362">rpt/{studyId}.pdf</text><text class="tn" x="762" y="380">signed report</text>
+
+<text class="tn" x="14" y="424">Row-level security in Postgres keyed on facility_id — a screener at Ambegaon physically cannot read Khed's rows, even if application code is compromised.</text>
+<text class="tn" x="14" y="442">Retrieval: console reads metadata from Postgres, tiles from the object store via presigned URLs. Large images never transit the API layer.</text>
+<text class="tn" x="14" y="460">Production: Object Lock makes raw captures write-once. Prototype: Garage has no Object Lock, so integrity is tamper-evident (SHA-256 in the audit chain), not tamper-proof.</text>
+</svg>
+</div>
+<figcaption><b>Figure 6 — Data model and storage layout.</b> Teal-outlined tables are the ones
+with regulatory weight. <code>model_ver</code> on every result is not a nicety: when you
+retrain, you must be able to answer "which model graded this patient in March" without
+archaeology.</figcaption>
+</figure>
+<p>Two further tables support caching and are specified in Section 26:
+<code>inference_cache</code>, keyed by image hash, model version and configuration hash, and a
+unique <code>client_key</code> column on <code>study</code> for idempotent retries.</p>
+<p>Row-level security binds only a role that does not own the tables. Section 25 specifies the
+separate <code>gateway</code> and <code>worker</code> roles, with the policy forced, that make the
+facility isolation above actually enforceable.</p>
+</section>
+
+<!-- ══════════════ 11 ══════════════ -->
+<section id="s11">
+<h2><span class="n">Section 11</span>Verification and validation</h2>
+<p class="lede">Two distinct disciplines that teams routinely conflate. Say both words
+separately in your pitch.</p>
+
+<h3>Data validation — is this input trustworthy?</h3>
+<table>
+<thead><tr><th style="width:36%">Check</th><th style="width:22%">Where</th><th>On failure</th></tr></thead>
+<tbody>
+<tr><td>Schema conformance</td><td>Gateway (OpenAPI/Pydantic)</td><td>400 before MATLAB is ever invoked</td></tr>
+<tr><td>SHA-256 of original bytes</td><td>Ingest → audit chain</td><td>Detects post-hoc tampering</td></tr>
+<tr><td>Perceptual hash vs. last 30 days at that facility</td><td><code>nx_quality</code></td>
+<td>Flags a repeat screening — prevents double-counting and wasted grader time</td></tr>
+<tr><td>Device fingerprint vs. registered cameras</td><td>Ingest</td><td>Quarantine, not silent acceptance</td></tr>
+<tr><td>Laterality sanity via disc–fovea vector</td><td><code>nx_structures</code></td>
+<td>Catches mislabelled eyes, a common and dangerous field error</td></tr>
+<tr><td>FHIR bundle against NRCeS R4 profile</td><td>Egress</td><td>Never emit a malformed clinical record</td></tr>
+</tbody>
+</table>
+
+<h3>Clinical validation — is this output trustworthy?</h3>
+<ul>
+<li><strong>Split at patient level, before anything else.</strong> APTOS contains
+near-duplicate fellow-eye pairs from the same patient. Splitting at image level leaks and
+inflates every number you report. Commit <code>splits.json</code> in hour one.</li>
+<li><strong>Pre-specify the threshold on validation.</strong> Choose the operating point that
+achieves sensitivity ≥ 0.90 on the validation ROC, freeze it, then report test performance at
+that fixed point. Picking it on the test set is the commonest form of accidental fraud in this
+competition.</li>
+<li><strong>Bootstrap for uncertainty.</strong> 2,000 resamples, 95% CIs on both sensitivity
+and specificity.</li>
+<li><strong>Hold Messidor-2 out entirely.</strong> Train on APTOS and IDRiD; test on data you
+never touched. "Our model generalises across acquisition sites" is a claim almost no hackathon
+team can make.</li>
+<li><strong>Report the full 5×5 confusion matrix and per-grade recall.</strong> APTOS is about
+49% grade 0; accuracy alone hides everything that matters.</li>
+</ul>
+
+<h3>Continuous validation — the Admin Console</h3>
+<p>Validation does not end at submission. The dashboard is the continuous form of the same
+discipline, and it is deliberately framed as <em>Programme &amp; Model Health</em> rather than
+observability, because the first panel is Module 5 content.</p>
+
+<table>
+<thead><tr><th style="width:30%">Panel</th><th>What it shows, and the intervention attached</th></tr></thead>
+<tbody>
+<tr><td>1 · Simulated vs. measured throughput</td><td>Your SimEvents prediction overlaid on
+what the district actually did. Divergence triggers re-parameterisation. This converts the
+Simulink module from slideware into a live operational instrument.</td></tr>
+<tr><td>2 · Gradability by site</td><td>Rejection rate by failure mode, sliced by device,
+operator and facility. A site at 58% gradability does not need a better model — it needs two
+hours of operator retraining or a cleaned lens coupling. Given that US adopters ran 49–75%
+gradability, a panel that surfaces and fixes this addresses the field's actual unsolved
+problem.</td></tr>
+<tr><td>3 · Model drift</td><td>Grade distribution against the training prior, mean calibrated
+confidence, and the <strong>grader override rate</strong> — which moves weeks before any
+accuracy metric does. Alert at baseline + 2σ over a 7-day window.</td></tr>
+<tr><td>4 · Referral funnel</td><td>Screened → referred → booked → <strong>attended</strong>.
+Only the last number matters. A dashboard that stops at "referred" is measuring the wrong
+thing.</td></tr>
+</tbody>
+</table>
+
+<p>Instrument it from MATLAB directly. Because MPS supports custom Prometheus metrics defined
+inside your MATLAB code, <code>nx_quality</code> can increment
+<code>netrasetu_quality_reject_total{reason="underexposed"}</code> as it rejects an image — no
+separate telemetry layer, and no risk of the dashboard and the algorithm disagreeing about what
+happened.</p>
+</section>
+
+<!-- ══════════════ 12 ══════════════ -->
+<section id="s12">
+<h2><span class="n">Section 12</span>Regulatory parameters</h2>
+<p class="lede">Four regimes apply. Know which one governs which part of the system.</p>
+
+<h3>CDSCO and the Medical Devices Rules 2017 — governs whether you can sell it</h3>
+<p>CDSCO issued draft guidance on Medical Device Software on 21 October 2025 and has since
+finalised it. The definition explicitly covers software as a medical device and medical
+software enabled by AI, subject to the four-tier Class A–D risk classification under MDR 2017.
+Software performing disease diagnosis or screening sits at the moderate-to-high end, so plan
+for <strong>Class C</strong>, filed on Form MD-15 through the Sugam portal.</p>
+<div class="note kill">
+<p><strong>CE Mark and FDA clearance do not substitute for CDSCO licensing.</strong> India's
+framework operates independently; foreign dossiers can support the clinical performance
+evaluation but the Indian application must be filed and approved separately. This kills the
+"we would follow the US pathway" answer, so have it ready as a backup slide.</p>
+</div>
+<p>The guidance does not create new law — it clarifies how MDR 2017 applies across the software
+lifecycle, with quality-management expectations aligned to ISO 13485, plus IEC 62304 for
+software lifecycle and ISO 14971 for risk management.</p>
+<p>The clause that matters most to you: India lacks AI/ML-specific rules today, but the
+emphasis on technical documentation and risk-based classification means developers of AI-enabled
+systems must be prepared to explain <strong>datasets, validation methods, and algorithmic
+logic</strong> as part of their submission. That is a regulator asking for exactly what your
+explainability module produces. It reframes Module 4 from "helpful for clinicians" to "required
+for market access."</p>
+
+<h3>DPDP Act 2023 and DPDP Rules 2025 — governs the data</h3>
+<p>Rules were notified on 13 November 2025 with phased compliance. Consent-manager
+registration opens 13 November 2026; the substantive consent, notice and security provisions
+take effect 13 May 2027. Consent must be specific, revocable, and recorded through
+interoperable platforms maintained by board-registered consent managers. Note that DPDP applies
+uniformly to all personal data without carving out a separate "sensitive" category as the
+earlier SPDI Rules did — so health data receives the same statutory baseline, and you should
+exceed it voluntarily.</p>
+
+<h3>ABDM — governs interoperability</h3>
+<p>FHIR R4 on NRCeS India profiles, ABHA identity, HIE-CM consent artefacts. Sandbox exit
+requires a functional testing report <em>and</em> a Web Application Security Assessment from a
+CERT-In empanelled agency before production credentials are issued. Budget for it; it is not a
+formality.</p>
+
+<h3>Clinical governance — governs the humans</h3>
+<p>Your system is a screening triage aid with mandatory human review, not an autonomous
+diagnostic. Say this consistently. It keeps you in a lower risk tier, it is what the problem
+statement actually asks for, and it is honest.</p>
+
+<h3>What to build in the hackathon</h3>
+<p>You will not achieve ABDM certification or a CDSCO licence in 36 hours and nobody expects
+you to. Build the <em>seams</em> — four hours of work, disproportionate credibility. A consent
+row visible in the demo. A real FHIR R4 bundle you can show as JSON. A hash-chained audit entry.
+The ABHA sandbox registration page on a slide with your integration plan.</p>
+</section>
+
+<!-- ══════════════ 13 ══════════════ -->
+<section id="s13">
+<h2><span class="n">Section 13</span>Tool register</h2>
+<p class="lede">One pick per layer. Each chosen because it is the native fit for something
+already in the stack, not because it is popular.</p>
+
+<h3>Algorithm and simulation</h3>
+<table>
+<thead><tr><th style="width:24%">Layer</th><th style="width:24%">Pick</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Numerical core</td><td>MATLAB R2026a</td><td>Current release; Deep Learning Toolbox training
+improvements and MATLAB Copilot land here.</td></tr>
+<tr><td>Transfer learning</td><td><code>imagePretrainedNetwork</code></td><td>Unified entry point for
+pretrained backbones with class adaptation.</td></tr>
+<tr><td>Explainability</td><td><code>gradCAM</code></td><td>Native, accepts a <code>FeatureLayer</code>
+so you can pull lesion-scale maps instead of 7×7 mush.</td></tr>
+<tr><td>Reference implementation</td><td><a href="https://github.com/ogemarques/xai-matlab">ogemarques/xai-matlab</a></td>
+<td>Working MATLAB Grad-CAM and imageLIME on a medical task. Read it before writing yours.</td></tr>
+<tr><td>Annotation</td><td>Medical Image Labeler</td><td>Correct IDRiD masks and label hard cases
+without leaving MATLAB.</td></tr>
+<tr><td>Reporting</td><td>MATLAB Report Generator</td><td>Programmatic PDF from the same session as
+the inference.</td></tr>
+<tr><td>Throughput</td><td><a href="https://www.mathworks.com/products/simevents.html">SimEvents</a></td>
+<td>Entity Queue, Entity Server, Resource Pool — the vocabulary of a district programme.</td></tr>
+<tr><td>Starting point</td><td><a href="https://github.com/mathworks/awesome-matlab-hackathons">awesome-matlab-hackathons</a></td>
+<td>MathWorks' own curated resource list.</td></tr>
+</tbody>
+</table>
+
+<h3>Bridge, platform and front end</h3>
+<table>
+<thead><tr><th style="width:24%">Layer</th><th style="width:24%">Pick</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Demo bridge</td><td><a href="https://www.mathworks.com/help/matlab/matlab-engine-for-python.html">MATLAB Engine API for Python</a> + FastAPI</td>
+<td>Ships with MATLAB, no extra licence, live inference on one laptop.</td></tr>
+<tr><td>Production serving</td><td><a href="https://www.mathworks.com/products/matlab-production-server.html">MATLAB Production Server</a> on <a href="https://github.com/mathworks-ref-arch/matlab-production-server-on-kubernetes">Kubernetes</a></td>
+<td>Stateless, horizontally scalable, client libraries for every channel.</td></tr>
+<tr><td>Simulink as a web page</td><td>Simulink Compiler → MATLAB Web App Server</td>
+<td>Gives the District Officer a URL. Intranet only, by design.</td></tr>
+<tr><td>Edge</td><td>GPU Coder → NVIDIA Jetson Orin</td><td>Generates CUDA for the whole algorithm
+including classical pre/post-processing, not just the network.</td></tr>
+<tr><td>Identity</td><td><a href="https://www.keycloak.org">Keycloak</a></td><td>MPS supports OAuth 2.0
+providers; Web App Server supports OIDC. One realm covers both.</td></tr>
+<tr><td>Metrics</td><td><a href="https://prometheus.io">Prometheus</a> + <a href="https://grafana.com">Grafana</a></td>
+<td>MPS already returns diagnostics in Prometheus format and supports custom metrics written in
+your MATLAB code. Nothing else has a first-party hook.</td></tr>
+<tr><td>Relational store</td><td><a href="https://www.postgresql.org">PostgreSQL 17</a></td>
+<td>JSONB for FHIR, pgcrypto for identifiers, row-level security for facility partitioning
+enforced in the database rather than in application code.</td></tr>
+<tr><td>Showcase data (Tier 1)</td><td><a href="https://supabase.com">Supabase</a>, Mumbai region</td><td>Postgres and S3-compatible Storage in <code>ap-south-1</code>, where Railway has no India region. Used for data only — not its Auth or browser-facing API. Section 25 covers the five settings that make it safe.</td></tr>
+<tr><td>Image store</td><td><a href="https://garagehq.deuxfleurs.fr/">Garage</a> (prototype) · Amazon S3, ap-south-1 (production)</td><td>MinIO stopped publishing community Docker images in October 2025 and its repository is archived, so it is no longer a safe pick. Garage is a single-binary S3-compatible store that runs in one container on your laptop. It lacks S3 Object Lock, so production moves to a managed in-country S3 with Object Lock in compliance mode.</td></tr>
+<tr><td>Framework</td><td>React 19 + Vite + TypeScript</td><td>Fastest path to a running PWA.</td></tr>
+<tr><td>Fundus viewer</td><td><a href="https://openseadragon.github.io">OpenSeadragon</a></td>
+<td>The most important front-end pick. An <code>&lt;img&gt;</code> tag destroys exactly the
+sub-pixel detail the problem statement asks you to detect.</td></tr>
+<tr><td>Offline</td><td><a href="https://dexie.org">Dexie</a> + <a href="https://developer.chrome.com/docs/workbox">Workbox</a></td>
+<td>What makes "offline camp" real rather than claimed.</td></tr>
+<tr><td>Typography</td><td>IBM Plex Sans / Devanagari / Mono via <a href="https://fontsource.org">Fontsource</a></td>
+<td>One superfamily with a real Devanagari companion, plus tabular figures for the grader
+console. Self-hostable, works offline.</td></tr>
+<tr><td>Voice</td><td>Web Speech API</td><td>Offline TTS using Android's installed hi-IN and mr-IN
+voices. Zero cost, high impact for low-literacy operators.</td></tr>
+</tbody>
+</table>
+
+<h3>Datasets</h3>
+<table>
+<thead><tr><th style="width:26%">Dataset</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td><a href="https://www.kaggle.com/c/aptos2019-blindness-detection">APTOS 2019</a></td>
+<td>Primary grading training set, 3,662 labelled images.</td></tr>
+<tr><td><a href="https://ieee-dataport.org/open-access/indian-diabetic-retinopathy-image-dataset-idrid">IDRiD</a></td>
+<td>Lesion segmentation and the ground truth for your Grad-CAM localisation metric. Indian
+population — say so on the slide.</td></tr>
+<tr><td><a href="https://zenodo.org/records/17615903">Refined IDRiD (Zenodo)</a></td>
+<td>81 images re-annotated at 1024×1024 with unified masks covering 7 lesion types and 4
+anatomical structures in 12 classes. A free multi-task target.</td></tr>
+<tr><td><a href="https://drive.grand-challenge.org/">DRIVE</a></td><td>Vessel U-Net and the published
+Dice/AUC benchmark you report against.</td></tr>
+<tr><td><a href="https://www.adcis.net/en/third-party/messidor2/">Messidor-2</a></td>
+<td><strong>Hold out entirely.</strong> External validation across acquisition sites.</td></tr>
+<tr><td><a href="https://arxiv.org/pdf/2008.09772">FGADR</a></td><td>1,842 pixel-level lesion-annotated
+images if you need segmentation volume beyond IDRiD's 81.</td></tr>
+<tr><td>DeepDRiD</td><td>The only public set with real image-quality labels rather than synthetic
+degradations. Use it to validate Module 1.</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- ══════════════ 14 ══════════════ -->
+<section id="s14">
+<h2><span class="n">Section 14</span>Interface design</h2>
+
+<h3>The design thesis</h3>
+<p class="lede">The interface is achromatic so the retina is the only saturated thing on
+screen.</p>
+<p>Every UI colour is a cool neutral. Every saturated colour is either the fundus image or a
+lesion marker. This is a clinical safety rule, not an aesthetic preference: if your buttons are
+orange and your hard-exudate markers are yellow, a tired grader at case 74 will conflate chrome
+with pathology.</p>
+
+<h4>Chrome</h4>
+<p>
+<span class="pill"><span class="swatch" style="background:#0B0F14"></span>#0B0F14 void</span>
+<span class="pill"><span class="swatch" style="background:#263038"></span>#263038 slate-700</span>
+<span class="pill"><span class="swatch" style="background:#7C8B98"></span>#7C8B98 slate-400</span>
+<span class="pill"><span class="swatch" style="background:#F4F6F7"></span>#F4F6F7 paper</span>
+<span class="pill"><span class="swatch" style="background:#0E7C86"></span>#0E7C86 signal</span>
+</p>
+<p>The single interactive accent is a deep teal, chosen as the optical complement of retinal
+orange so it can never be mistaken for tissue.</p>
+
+<h4>Lesion semantics — derived from what each lesion looks like</h4>
+<p>
+<span class="pill"><span class="swatch" style="background:#E8C33A"></span>hard exudate</span>
+<span class="pill"><span class="swatch" style="background:#B9D6C6"></span>cotton wool spot</span>
+<span class="pill"><span class="swatch" style="background:#8E1F2B"></span>haemorrhage</span>
+<span class="pill"><span class="swatch" style="background:#C2185B"></span>microaneurysm</span>
+<span class="pill"><span class="swatch" style="background:#5A1A14"></span>vessel</span>
+<span class="pill"><span class="swatch" style="background:#7B2FF7"></span>NV proxy</span>
+</p>
+<p>Microaneurysms are magenta-rose rather than red so that 20-pixel dots stay findable against
+retinal orange. The NV marker is violet — the one non-natural hue in the system — because it is
+a proxy flag, not a detection, and the interface should not pretend otherwise.</p>
+
+<h4>Decision states — three, and only three</h4>
+<p>
+<span class="pill" style="border-color:#B3261E;color:#B3261E">Refer</span>
+<span class="pill" style="border-color:#1B7F4C;color:#1B7F4C">Routine rescreen</span>
+<span class="pill" style="border-color:#B26B00;color:#B26B00">Retake image</span>
+</p>
+<p>There is no fourth state. If the system can output "possibly," an ASHA worker cannot act on
+it.</p>
+
+<h4>Type</h4>
+<p>IBM Plex Sans for display and body, IBM Plex Sans Devanagari at exact weight parity so
+localisation is never visually second-class, IBM Plex Mono with tabular figures for lesion
+counts, confidences, ABHA IDs and timestamps — anything that appears in a column and must not
+jitter between cases. Body text floor is 17px, not 14px: your users are diabetics over 50
+reading a phone in sunlight.</p>
+
+<h3>The signature element: the Evidence Strip</h3>
+<p>A horizontal filmstrip of native-resolution lesion crops — not a heatmap. Each tile is a
+200×200 window cut from the original image at a detected lesion centroid, with a thin marker
+ring and a caption naming the ICDR criterion it satisfies.</p>
+
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│ EVIDENCE                                    6 findings  ›    │
+├────────┬────────┬────────┬────────┬────────┬────────┬────────┤
+│  [MA]  │  [MA]  │  [HE]  │  [HE]  │  [EX]  │  [EX]  │        │
+│ ◦      │   ◦    │  ●●    │   ●    │  ▓▓    │  ▓     │  + 0   │
+│ super- │ infero-│ supero-│ nasal  │ 1.4 DD │ 0.8 DD │        │
+│ temporal│nasal  │ nasal  │        │ from   │ from   │        │
+│        │        │        │        │ fovea  │ fovea  │        │
+├────────┴────────┴────────┴────────┴────────┴────────┴────────┤
+│ 14 intraretinal haemorrhages across 3 quadrants               │
+│ → ICDR Level 2, Moderate NPDR · REFERABLE                     │
+└──────────────────────────────────────────────────────────────┘</code></pre>
+
+<p>Ship Grad-CAM too — the problem statement asks for it — but ship it as context, in a
+collapsible panel, with your measured Lesion Localisation Precision printed beside it. Showing
+the number turns a decorative overlay into evidence.</p>
+
+<h3>The second invention: confidence as a band</h3>
+<p>Never print "Confidence: 87.3%." It is false precision and clinicians distrust it correctly.
+Print the calibrated posterior across all five grades as a stacked band with the referral
+threshold drawn as a rule.</p>
+
+<pre><code> Grade   0        1        2        3        4
+        ├────────┼────────┼────────┼────────┼────────┤
+        ▓▓▓▓░░░░░░░░░░░░████████████████░░░░░░░░
+                        │
+                  referral threshold (frozen on validation)
+
+ Referable DR: 0.91   ·   ECE after temperature scaling: 0.031</code></pre>
+
+<p>This communicates two things a single number cannot: where the probability mass sits, and
+how close the case is to the line. A case at 0.51 and one at 0.98 both round to "refer" but
+deserve very different amounts of the grader's attention — and the review queue should sort on
+exactly this.</p>
+
+<h3>Reviewer Console rules that produce the 30 seconds</h3>
+<ul>
+<li><strong>Keyboard first.</strong> <code>J</code>/<code>K</code> navigate, <code>A</code>
+agrees, <code>O</code> overturns, <code>U</code> marks ungradeable, <code>1–5</code> toggle
+overlays, <code>G</code> toggles Grad-CAM, <code>Z</code> snaps to 1:1. A mouse-driven console
+cannot reach a 21-second median.</li>
+<li><strong>No scrolling.</strong> One case, one viewport. If it does not fit, cut content.</li>
+<li><strong>Sort by decision value.</strong> Order by severity × proximity to threshold, so
+borderline high-grade cases surface first.</li>
+<li><strong>Overturns are data.</strong> Every overturn requires a one-tap reason chip — image
+artefact, lesion miscount, disc-region confusion, DME missed. That chip is your active-learning
+label and your error-taxonomy slide.</li>
+<li><strong>Show the median timer.</strong> It quantifies the sub-30-second requirement live,
+in front of the judges.</li>
+</ul>
+
+<h3>Rejection is a feature, with words</h3>
+<p>Every other team's quality module outputs a binary. Yours outputs a directive. Build a
+lookup from failure mode — defocus, underexposure, partial field, media opacity — to a localised
+instruction, in three languages. Two hours of work, and the most field-credible thing in your
+demo.</p>
+<pre><code>   RETAKE
+   The nose side of this image is too dark.
+   Move the light slightly to the right.
+   [ Retake ]              attempt 2 of 3</code></pre>
+<p>After three failures: <em>"Cannot screen here — refer for a dilated exam."</em> A clean
+escalation, not a loop. Log every failure reason; that distribution is what parameterises the
+rework loop in Figure 4, making it an empirical value rather than a guess.</p>
+</section>
+
+<!-- ══════════════ 15 ══════════════ -->
+<section id="s15">
+<h2><span class="n">Section 15</span>Prototype build plan</h2>
+<p class="lede">One laptop, campus MATLAB licence, no reliable internet, ten minutes on stage,
+a projector that will misrepresent your colours.</p>
+
+<h3>Demo topology</h3>
+<pre><code>  ONE LAPTOP
+  ┌───────────────────────────────────────────────────┐
+  │ MATLAB R2026a                                     │
+  │   netrasetu_analyze.m  ← the whole pipeline       │
+  └────────────────┬──────────────────────────────────┘
+                   │ matlab.engine (in-process, kept warm)
+  ┌────────────────▼──────────────────────────────────┐
+  │ FastAPI  :8000                                    │
+  │   POST /analyze         multipart image → JSON    │
+  │   GET  /study/{id}/tile OpenSeadragon DZI         │
+  │   GET  /report/{id}.pdf                           │
+  └────────────────┬──────────────────────────────────┘
+  ┌────────────────▼──────────────────────────────────┐
+  │ Vite dev server :5173                             │
+  │   /field   /review   /patient/{token}   /admin    │
+  └───────────────────────────────────────────────────┘
+  Phone joins laptop hotspot → http://&lt;laptop-ip&gt;:5173/field</code></pre>
+<p>The phone-on-hotspot detail matters. Handing a judge a <em>phone</em> running your field app
+while the reviewer console is live on the projector is worth more than any slide.</p>
+
+<h3>The MATLAB contract</h3>
+<p>Write one entry point and freeze its signature on day one. Everything negotiates around
+it.</p>
+<pre><code>function out = netrasetu_analyze(imgPath)
+%NETRASETU_ANALYZE  Full DR screening pipeline for one fundus image.
+%   Returns a struct that jsonencode() can serialise directly.
+
+    out = struct();
+    out.studyId = char(matlab.lang.internal.uuid);
+
+    % 1 ── quality gate ------------------------------------------------
+    q = nx_quality(imgPath);          % .score .verdict .failureMode .phash
+    out.quality = q;
+    if q.verdict == "reject"
+        out.decision       = "RETAKE";
+        out.retakeGuidance = nx_guidance(q.failureMode);   % localised key
+        return
+    end
+
+    % 2 ── enhance -----------------------------------------------------
+    I = nx_enhance(imgPath);          % FOV crop → Ben Graham → CLAHE
+
+    % 3 ── structures & lesions ---------------------------------------
+    s = nx_structures(I);             % optic disc, fovea, vessel mask
+    L = nx_lesions(I, s);             % MA / HE / EX / SE + centroids
+
+    % 4 ── two-stream grading + calibration ---------------------------
+    g = nx_grade(I, L, q);            % .posterior(1x5) .grade .pReferable
+    out.grade      = g.grade;
+    out.posterior  = g.posterior;
+    out.pReferable = g.pReferable;
+    out.decision   = string(g.pReferable >= NX_THRESHOLD) ...
+                     .replace("true","REFER").replace("false","ROUTINE");
+
+    % 5 ── explanation -------------------------------------------------
+    out.gradcamPng = nx_gradcam(I, g);           % file path
+    out.evidence   = nx_evidence_crops(I, L);    % .type .png .location
+    out.criteria   = nx_icdr_criteria(L, s);     % matched ICDR text keys
+    out.llp        = g.lesionLocalisationPrecision;
+
+    % 6 ── artefacts ---------------------------------------------------
+    out.reportPdf  = nx_report(out);             % Report Generator
+    out.fhirBundle = nx_fhir(out);               % FHIR R4 JSON
+end</code></pre>
+<p>Two rules that save you: return a struct <code>jsonencode</code> can eat — no objects, no
+function handles, no <code>categorical</code> — and write PNGs to a served static folder,
+returning paths rather than base64 blobs over the wire.</p>
+
+<h3>Nine-hour build order — two front end, three MATLAB, one integrator</h3>
+<table>
+<thead><tr><th style="width:9%">Hours</th><th style="width:31%">MATLAB</th><th style="width:30%">Front end</th><th>Integrator</th></tr></thead>
+<tbody>
+<tr><td>0–1</td><td>Freeze the <code>netrasetu_analyze</code> signature; stub it with canned
+JSON</td><td>Scaffold Vite, Tailwind, Plex; build four routes on mock data</td>
+<td><code>docker-compose up</code> for Postgres, Garage, Keycloak, Prometheus, Grafana; run
+migrations; seed four facilities; FastAPI against the stub. <strong>End-to-end green in hour
+one.</strong></td></tr>
+<tr><td>1–4</td><td>Quality gate, enhancement, lesion detectors</td><td>Reviewer Console,
+OpenSeadragon, Evidence Strip</td><td>Tile pipeline, static serving</td></tr>
+<tr><td>4–7</td><td>Grading head, calibration, Grad-CAM, LLP metric</td><td>Field App, quality
+ring, retake guidance, TTS</td><td>Swap stub for the real engine call; latency budget</td></tr>
+<tr><td>7–8</td><td>Report Generator, FHIR bundle, SimEvents sweep, custom Prometheus counters
+from <code>nx_quality</code></td><td>Patient View, i18n, District Twin embed, Admin
+shell</td><td>Seed 30 days of synthetic programme data; wire Grafana; test on venue Wi-Fi</td></tr>
+<tr><td>8–9</td><td><strong>Freeze the checkpoint.</strong> No retraining after this
+hour.</td><td>Projector colour check; dark-room check</td><td>Three full dry runs, including
+the failure path</td></tr>
+</tbody>
+</table>
+
+<div class="note warn">
+<p><strong>Two non-negotiables.</strong> Build the stub-to-UI path in the first hour so
+integration is never a cliff at hour eight. And nominate one person who owns the demo laptop
+and the frozen checkpoint from hour eight — nothing kills a finale like a last-minute retrain
+that breaks the app.</p>
+</div>
+
+<h3>The demo pack</h3>
+<p>Curate six images and rehearse them in this order. Never let the demo depend on a random
+draw.</p>
+<table>
+<thead><tr><th style="width:8%">#</th><th style="width:38%">Image</th><th>What it proves</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Clean grade 0</td><td>Speed, and that you do not over-refer</td></tr>
+<tr><td>2</td><td>Grade 2, countable haemorrhages</td><td>Evidence Strip and ICDR criterion match</td></tr>
+<tr><td>3</td><td>Grade 4 with NV near disc</td><td>Severity handling and your honesty about the NV proxy</td></tr>
+<tr><td>4</td><td>Deliberately underexposed</td><td>Retake guidance — your credibility moment</td></tr>
+<tr><td>5</td><td>Dense cataract, ungradeable</td><td>Clean escalation after three attempts</td></tr>
+<tr><td>6</td><td>Unseen Messidor-2 image</td><td>External validation, live</td></tr>
+</tbody>
+</table>
+
+<h3>Offline insurance</h3>
+<ul>
+<li>Everything on <code>localhost</code>. No CDN fonts, no CDN JavaScript.</li>
+<li>A pre-warmed cache: run all six demo images through the pipeline beforehand so their
+results sit in the inference cache. If the engine fails or exceeds 15 seconds, the gateway serves
+them from the cache through the same code path, so the UI is identical (Section 26). Rehearse in
+this mode once so you can fall into it without a stutter.</li>
+<li>The PDF report already open in a second tab.</li>
+<li>One A3 poster of the Reviewer Console. If both laptop and projector fail, you still
+present.</li>
+</ul>
+</section>
+
+<!-- ══════════════ 16 ══════════════ -->
+<section id="s16">
+<h2><span class="n">Section 16</span>Demo script</h2>
+<table>
+<thead><tr><th style="width:12%">Time</th><th>Beat</th></tr></thead>
+<tbody>
+<tr><td>0:00</td><td><strong>The number.</strong> 77 million Indian diabetics. One
+ophthalmologist per 100,000 rural people. 90% of vision loss is preventable — if someone
+looks.</td></tr>
+<tr><td>0:30</td><td><strong>Sunita.</strong> Hand a judge the phone. They capture. The retake
+prompt fires. They fix it. Nine seconds to REFER. Let them do it; do not narrate it.</td></tr>
+<tr><td>2:00</td><td><strong>Dr. Rao.</strong> Reviewer Console on the projector. Three cases on
+the keyboard. Overturn one with a reason chip. Point at the live median: 21 seconds.</td></tr>
+<tr><td>3:30</td><td><strong>The evidence.</strong> Zoom to 1:1 on a microaneurysm. Say the 7×7
+arithmetic. Show LLP = 84% beside the Grad-CAM.</td></tr>
+<tr><td>4:30</td><td><strong>Ramesh.</strong> Patient View in Marathi, read aloud. End on the
+held appointment slot.</td></tr>
+<tr><td>5:15</td><td><strong>The twin.</strong> Two slider drags. "Two graders and 2 Mbps sustain
+400 patients a day; auto-discharge cuts ophthalmologist-hours by 71%."</td></tr>
+<tr><td>5:45</td><td><strong>The loop closes.</strong> Admin Panel 1: simulated versus measured
+throughput on one axis. Then Panel 2: a site at 58% gradability, flagged for lens cleaning.
+"The model isn't the intervention here. The operator is."</td></tr>
+<tr><td>6:15</td><td><strong>The numbers.</strong> Sensitivity and specificity with bootstrap
+CIs at a frozen threshold. The four-row ablation. Messidor-2 as external validation.</td></tr>
+<tr><td>6:45</td><td><strong>What this doesn't do yet.</strong> Four honest bullets. Stop
+talking.</td></tr>
+</tbody>
+</table>
+
+<h3>The closing pitch</h3>
+<p class="lede">"We built a quality-gated, two-stream pipeline that reaches 92% sensitivity and
+87% specificity for referable DR on external validation — and our explanations land inside
+annotated lesions 84% of the time, so an ophthalmologist confirms the referral in 22 seconds.
+Our SimEvents model shows that lets two remote graders cover a district of 100,000
+patients."</p>
+<p>Four numbers, all defensible, all measured. That is what beats a prettier heatmap.</p>
+
+<h3>What this doesn't do yet</h3>
+<ul>
+<li>Neovascularisation is a vessel-morphology proxy, not a detector.</li>
+<li>No prospective clinical validation.</li>
+<li>Single-field imaging only.</li>
+<li>In the prototype, offline capture queues for grading on sync; fully on-device grading is the
+Jetson edge path.</li>
+<li>Prototype object storage is tamper-evident, not tamper-proof; write-once Object Lock arrives
+with the production tier.</li>
+<li>No CDSCO pathway completed.</li>
+</ul>
+<p>Every judge has sat through teams claiming clinical readiness. The one team that states its
+limits precisely reads as the only one that understands the domain.</p>
+</section>
+
+<!-- ══════════════ 17 ══════════════ -->
+<section id="s17">
+<h2><span class="n">Section 17</span>Risk register</h2>
+<table>
+<thead><tr><th style="width:38%">Risk</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>Patient-level leakage in APTOS splits</td><td>Split by patient before anything else;
+commit <code>splits.json</code> in hour one</td></tr>
+<tr><td>Grad-CAM too coarse to be clinically useful</td><td>Intermediate feature layer; ship the
+Evidence Strip as the primary explanation and Grad-CAM as context</td></tr>
+<tr><td>Threshold chosen on the test set</td><td>Pre-specify on validation, freeze, report
+bootstrap CIs at that fixed point — and say so on the slide</td></tr>
+<tr><td>No public quality-labelled data</td><td>Synthesise degradations for training; validate
+against DeepDRiD's real quality labels</td></tr>
+<tr><td>NV detector overclaimed</td><td>Label it a proxy in the UI, with a distinct violet hue,
+and in the pitch</td></tr>
+<tr><td>Demo network failure</td><td>Everything on localhost; pre-warmed inference cache as fallback; A3
+poster</td></tr>
+<tr><td>MATLAB engine cold start</td><td>Start the engine at FastAPI boot, keep it warm, warm up
+on one image before the demo</td></tr>
+<tr><td>Projector colour shift kills lesion semantics</td><td>Check on the actual projector; if
+greens shift, raise the routine-state luminance and re-export tokens</td></tr>
+<tr><td>Toolbox coverage looks thin to MathWorks judges</td><td>Visibly touch Image Processing,
+Computer Vision, Deep Learning, Statistics &amp; ML, Medical Imaging, and Simulink/SimEvents;
+name them on the architecture slide</td></tr>
+<tr><td>Platform layer eats the algorithm budget</td><td><code>docker-compose up</code> for all
+five services, seeded, in hour zero. If it is not running by hour two, ship with a stub auth
+guard and a JSON audit file — the algorithm is what is graded</td></tr>
+<tr><td>Empty admin dashboard at demo time</td><td>Seed 30 days of synthetic programme data
+across four facilities beforehand. A Grafana panel with three data points is worse than no
+panel</td></tr>
+<tr><td>Judge asks whether this is a medical device</td><td>Answer immediately: yes, MDSW under
+MDR 2017, planning Class C via Form MD-15, and FDA or CE clearance would not substitute for
+CDSCO licensing. Keep it on a backup slide</td></tr>
+<tr><td>GPU out of memory on 6 GB VRAM</td><td>Halve the mini-batch, then drop to 384 px;
+<code>reset(gpuDevice)</code> before each run; checkpoint every epoch</td></tr>
+<tr><td>Two MATLAB processes exhaust 16 GB RAM</td><td>Shared engine: <code>shareEngine</code> in
+the desktop, <code>connect_matlab</code> from Python. Never train while the Docker stack runs</td></tr>
+<tr><td>Laptop GPU throttles mid-training</td><td>AC power, Best performance mode, checkpoints
+so a thermal stop costs one epoch</td></tr>
+<tr><td>npm 12 leaves native packages unbuilt</td><td>Approve the listed package and reinstall;
+install the Railway CLI via Scoop</td></tr>
+<tr><td>Space in the Windows user path breaks tooling</td><td>Everything under
+<code>C:\dev\netrasetu</code> from the first command</td></tr>
+<tr><td>Phone camera and offline mode fail over plain HTTP</td><td>Chrome insecure-origin flag
+on the demo phone for Tier 0; Tier 1 uses Vercel's real HTTPS</td></tr>
+<tr><td>Object-storage dependency abandoned upstream</td><td>Already happened to MinIO. Garage
+for the prototype, managed S3 with Object Lock for production, and pinned image tags throughout</td></tr>
+<tr><td>A cached result reaches the wrong patient</td><td>Cache stores computation only; every
+request creates its own study; identical pixels on a different patient are flagged for review,
+never auto-served. Covered by a dedicated test</td></tr>
+<tr><td>Training silently mixes old and new preprocessing</td><td>Preprocessing version in the
+cache folder name; changing <code>nx_enhance</code> means a new folder</td></tr>
+<tr><td>Supabase project paused when a judge opens the link</td><td>Daily keep-alive job;
+restore and load the site yourself before sharing the link</td></tr>
+<tr><td>Gateway connects as table owner and bypasses row-level security</td><td>Dedicated
+<code>gateway</code> and <code>worker</code> roles without BYPASSRLS; <code>FORCE ROW LEVEL
+SECURITY</code> on clinical tables</td></tr>
+<tr><td>Supabase project created outside India</td><td>Pick "South Asia (Mumbai)" explicitly at
+creation — region cannot be changed afterwards</td></tr>
+<tr><td>Stale model served after retraining</td><td>Model version is part of every cache key;
+restart the engine on deploy so the persistent model reloads</td></tr>
+</tbody>
+</table>
+
+<h3>Turning this into a portfolio artifact</h3>
+<ol>
+<li><strong>A public repo with <code>docs/VALIDATION.md</code>.</strong> Metrics with confidence
+intervals, a documented splits protocol, the ablation table, external validation. This one file
+is a stronger hiring signal than the entire application, because almost nobody writes it.</li>
+<li><strong>A MATLAB File Exchange submission.</strong> Package the quality-assessment module or
+the Grad-CAM-versus-lesion-mask localisation metric as a documented standalone function with a
+live script demo. MathWorks engineers read File Exchange.</li>
+<li><strong>A four-minute recorded walkthrough of the engineering</strong>, not the pitch. Why
+ordinal regression beats 5-class softmax for QWK, why Grad-CAM came from an intermediate layer,
+why the threshold was frozen on validation.</li>
+</ol>
+</section>
+
+<!-- ══════════════ 18 ══════════════ -->
+<section id="s18">
+<h2><span class="n">Section 18</span>Setup roadmap</h2>
+<p class="lede">Six phases, four gates. Do not start a phase until the gate before it passes —
+every gate here exists because skipping it produces a failure that surfaces hours later and
+looks like a different problem.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 515" role="img" aria-label="Flowchart from machine preparation through to deployment tiers">
+<style>
+  .pp-b{fill:#fff;stroke:#C6CFD5;stroke-width:1}
+  .pp-bk{fill:#E6F1F2;stroke:#0E7C86;stroke-width:1.4}
+  .pp-g{fill:#FBF3E6;stroke:#B26B00;stroke-width:1.2}
+  .pp-h{font-size:12px;fill:#12171C;font-weight:600}
+  .pp-n{font-size:10px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .pp-l{font-size:10px;fill:#2C363E}
+  .pp-gt{font-size:9.2px;fill:#B26B00}
+  .pp-gl{font-size:9.2px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .pp-a{stroke:#5E6B75;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+  .pp-f{stroke:#B26B00;stroke-width:1.3;fill:none;marker-end:url(#arR);stroke-dasharray:4 3}
+</style>
+
+<!-- row 1 -->
+<rect class="pp-b" x="14" y="40" width="200" height="140" rx="3"/>
+<text class="pp-n" x="26" y="58">phase 1</text><text class="pp-h" x="26" y="76">Prepare machine</text>
+<text class="pp-l" x="26" y="96">Project at C:\dev, no spaces</text>
+<text class="pp-l" x="26" y="112">NVIDIA driver → nvidia-smi</text>
+<text class="pp-l" x="26" y="128">WSL2 + Docker Desktop</text>
+<text class="pp-l" x="26" y="144">.wslconfig memory cap</text>
+<text class="pp-l" x="26" y="160">AC power, Best performance</text>
+
+<path class="pp-a" d="M214 110 L248 110"/>
+<path class="pp-g" d="M284 80 L318 110 L284 140 L250 110 Z"/>
+<text class="pp-gt" x="284" y="108" text-anchor="middle">GPU</text>
+<text class="pp-gt" x="284" y="120" text-anchor="middle">ok?</text>
+<text class="pp-gl" x="284" y="156" text-anchor="middle">validateGPU</text>
+<path class="pp-a" d="M318 110 L352 110"/>
+<path class="pp-f" d="M284 80 L284 26 L114 26 L114 38"/>
+<text class="pp-gt" x="150" y="20">fail → fix driver</text>
+
+<rect class="pp-b" x="354" y="40" width="200" height="140" rx="3"/>
+<text class="pp-n" x="366" y="58">phase 2</text><text class="pp-h" x="366" y="76">Install</text>
+<text class="pp-l" x="366" y="96">MATLAB R2026a + 8 add-ons</text>
+<text class="pp-l" x="366" y="112">Pretrained network add-on</text>
+<text class="pp-l" x="366" y="128">Python 3.12 venv + engine</text>
+<text class="pp-l" x="366" y="144">Vite app, front-end deps</text>
+<text class="pp-l" x="366" y="160">Datasets via Kaggle CLI</text>
+
+<path class="pp-a" d="M554 110 L588 110"/>
+<path class="pp-g" d="M624 80 L658 110 L624 140 L590 110 Z"/>
+<text class="pp-gt" x="624" y="108" text-anchor="middle">stack</text>
+<text class="pp-gt" x="624" y="120" text-anchor="middle">up?</text>
+<text class="pp-gl" x="624" y="156" text-anchor="middle">engine + compose</text>
+<path class="pp-a" d="M658 110 L692 110"/>
+<path class="pp-f" d="M624 80 L624 26 L454 26 L454 38"/>
+<text class="pp-gt" x="470" y="20">fail → reinstall step</text>
+
+<rect class="pp-b" x="694" y="40" width="200" height="140" rx="3"/>
+<text class="pp-n" x="706" y="58">phase 3</text><text class="pp-h" x="706" y="76">Configure</text>
+<text class="pp-l" x="706" y="96">.env as single source</text>
+<text class="pp-l" x="706" y="112">docker compose: 5 services</text>
+<text class="pp-l" x="706" y="128">Garage layout + bucket</text>
+<text class="pp-l" x="706" y="144">Keycloak realm import</text>
+<text class="pp-l" x="706" y="160">nx_config + threshold.json</text>
+
+<path class="pp-a" d="M794 180 L794 238"/>
+
+<!-- row 2, right to left -->
+<rect class="pp-b" x="694" y="240" width="200" height="140" rx="3"/>
+<text class="pp-n" x="706" y="258">phase 4</text><text class="pp-h" x="706" y="276">Integrate</text>
+<text class="pp-l" x="706" y="296">Stub the MATLAB contract</text>
+<text class="pp-l" x="706" y="312">FastAPI ↔ shared engine</text>
+<text class="pp-l" x="706" y="328">OpenAPI → TypeScript types</text>
+<text class="pp-l" x="706" y="344">Tiles + presigned URLs</text>
+<text class="pp-l" x="706" y="360">Pull worker (Tier 1 only)</text>
+
+<path class="pp-a" d="M694 310 L660 310"/>
+<path class="pp-g" d="M624 280 L658 310 L624 340 L590 310 Z"/>
+<text class="pp-gt" x="624" y="307" text-anchor="middle">contract</text>
+<text class="pp-gt" x="624" y="319" text-anchor="middle">green?</text>
+<text class="pp-gl" x="624" y="356" text-anchor="middle">hour-one check</text>
+<path class="pp-a" d="M590 310 L556 310"/>
+<path class="pp-f" d="M624 280 L624 216 L760 216 L760 238"/>
+<text class="pp-gt" x="640" y="210">fail → fix contract</text>
+
+<rect class="pp-b" x="354" y="240" width="200" height="140" rx="3"/>
+<text class="pp-n" x="366" y="258">phase 5</text><text class="pp-h" x="366" y="276">Test</text>
+<text class="pp-l" x="366" y="296">MATLAB unit + golden images</text>
+<text class="pp-l" x="366" y="312">pytest: auth, schema, audit</text>
+<text class="pp-l" x="366" y="328">Playwright: offline E2E</text>
+<text class="pp-l" x="366" y="344">Locust → SimEvents input</text>
+<text class="pp-l" x="366" y="360">Clinical validation gate</text>
+
+<path class="pp-a" d="M354 310 L320 310"/>
+<path class="pp-g" d="M284 280 L318 310 L284 340 L250 310 Z"/>
+<text class="pp-gt" x="284" y="307" text-anchor="middle">gates</text>
+<text class="pp-gt" x="284" y="319" text-anchor="middle">pass?</text>
+<text class="pp-gl" x="284" y="356" text-anchor="middle">all test gates</text>
+<path class="pp-a" d="M250 310 L216 310"/>
+<path class="pp-f" d="M284 280 L284 216 L454 216 L454 238"/>
+<text class="pp-gt" x="300" y="210">fail → fix, rerun</text>
+
+<rect class="pp-bk" x="14" y="240" width="200" height="140" rx="3"/>
+<text class="pp-n" x="26" y="258">phase 6</text><text class="pp-h" x="26" y="276">Deploy</text>
+<text class="pp-l" x="26" y="296">Freeze model checkpoint</text>
+<text class="pp-l" x="26" y="312">Tag release, build web</text>
+<text class="pp-l" x="26" y="328">Choose tier below</text>
+<text class="pp-l" x="26" y="344">Smoke-test 6 demo images</text>
+<text class="pp-l" x="26" y="360">Rehearse fallback mode</text>
+
+<path class="pp-a" d="M114 380 L114 410 L762 410" style="marker-end:none"/>
+<path class="pp-a" d="M158 410 L158 428"/>
+<path class="pp-a" d="M460 410 L460 428"/>
+<path class="pp-a" d="M762 410 L762 428"/>
+
+<rect class="pp-bk" x="14" y="430" width="288" height="70" rx="3"/>
+<text class="pp-h" x="28" y="452">Tier 0 — Classroom</text>
+<text class="pp-l" x="28" y="470">one laptop · localhost · offline</text>
+<text class="pp-gl" x="28" y="488">the demo</text>
+
+<rect class="pp-b" x="316" y="430" width="288" height="70" rx="3"/>
+<text class="pp-h" x="330" y="452">Tier 1 — Public showcase</text>
+<text class="pp-l" x="330" y="470">Vercel · Railway · Supabase · laptop</text>
+<text class="pp-gl" x="330" y="488">a link for judges and recruiters</text>
+
+<rect class="pp-b" x="618" y="430" width="288" height="70" rx="3" stroke-dasharray="4 3"/>
+<text class="pp-h" x="632" y="452">Tier 2 — Production</text>
+<text class="pp-l" x="632" y="470">MPS on Kubernetes · in-country</text>
+<text class="pp-gl" x="632" y="488">the pitch, not the build</text>
+</svg>
+</div>
+<figcaption><b>Figure 7 — Setup-to-deployment flowchart.</b> Read row one left to right, row two
+right to left. Amber dashed paths are failure loops; each returns to the phase where the fix
+actually lives. Tier 0 is teal because it is the one you must ship; Tier 2 is dashed because you
+describe it, you do not build it.</figcaption>
+</figure>
+</section>
+
+<!-- ══════════════ 19 ══════════════ -->
+<section id="s19">
+<h2><span class="n">Section 19</span>Your machine — compatibility verdict</h2>
+<p class="lede">Every component clears its requirement. Memory and VRAM are tight, not
+insufficient — they need a plan, not an upgrade.</p>
+
+<table>
+<thead><tr><th style="width:18%">Component</th><th style="width:27%">Yours</th><th style="width:27%">Requirement</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>OS</td><td>Windows 11 Home 26H2, build 26300</td><td>MATLAB R2026a: Windows 11 23H2 or
+higher</td><td><span class="pill keep">pass</span></td></tr>
+<tr><td>CPU</td><td>i7-11800H, 8 cores / 16 threads</td><td>Recommended: four logical cores with
+AVX2 — and a future MATLAB release will make AVX2 mandatory</td><td><span class="pill keep">pass</span>
+Tiger Lake has AVX2</td></tr>
+<tr><td>RAM</td><td>16 GB (15.7 usable)</td><td>Minimum 8 GB, recommended 16 GB</td>
+<td><span class="pill scope">tight</span> see memory plan</td></tr>
+<tr><td>GPU</td><td>RTX 3060 Laptop, 6 GB, Ampere cc 8.6</td><td>MATLAB supports NVIDIA compute
+capability 5.0 to 9.x</td><td><span class="pill keep">pass</span> VRAM is the constraint</td></tr>
+<tr><td>Storage</td><td>~303 GB free</td><td>MATLAB with these toolboxes ~15–20 GB; datasets
+~25 GB; containers ~6 GB</td><td><span class="pill keep">pass</span></td></tr>
+<tr><td>Python</td><td>3.12.0</td><td>R2026a engine supports 3.9, 3.10, 3.11, 3.12 and 3.13</td>
+<td><span class="pill keep">pass</span> but upgrade the patch</td></tr>
+<tr><td>npm</td><td>12.0.1</td><td>Vite 7 requires Node 20.19+ or 22.12+</td>
+<td><span class="pill scope">check</span> run <code>node --version</code></td></tr>
+<tr><td>Docker</td><td>not yet installed</td><td>Docker Desktop on Windows Home uses the WSL2
+backend</td><td><span class="pill scope">install</span></td></tr>
+<tr><td>User path</td><td><code>C:\Users\Gurjas Gandhi</code></td><td>—</td>
+<td><span class="pill cut">move</span> the space breaks tools</td></tr>
+</tbody>
+</table>
+
+<h3>Four things specific to this machine</h3>
+<p><strong>The space in your user path will bite you.</strong> Compiler toolchains, some CUDA
+builds, Docker bind mounts and shell scripts mishandle <code>C:\Users\Gurjas Gandhi</code>.
+Put the entire project at <code>C:\dev\netrasetu</code> and keep datasets under
+<code>C:\dev\netrasetu\data</code>. This costs nothing now and an afternoon later.</p>
+
+<p><strong>Python 3.12.0 is the first 3.12 release.</strong> It is supported, but install the
+latest 3.12 patch release for bug and security fixes. Same minor version, so engine
+compatibility is unchanged. Do not jump to 3.14 — it is outside R2026a's qualified range.</p>
+
+<p><strong>npm 12 blocks dependency install scripts by default.</strong> Packages that build or
+download a native binary during install can be left unbuilt. If <code>npm run dev</code> fails
+with an esbuild or missing-binary error, that is the cause: approve the listed package using the
+instruction npm prints at the end of <code>npm install</code>, then reinstall. For the same
+reason, install the Railway CLI through Scoop rather than npm (Section 21).</p>
+
+<p><strong>This is a hybrid-graphics laptop.</strong> The Intel UHD drives the display; the RTX
+3060 does compute. MATLAB's GPU functions find the NVIDIA device regardless. What matters is
+power: laptop GPUs throttle heavily on battery. Train plugged in, with Windows power mode set to
+Best performance.</p>
+
+<h3>Memory plan — three operating modes</h3>
+<p>16 GB holds the whole stack, but not the whole stack <em>and</em> a training run. Choose one
+mode at a time. Figures are estimates; confirm in Task Manager on your own machine.</p>
+<table>
+<thead><tr><th style="width:14%">Mode</th><th style="width:38%">Running</th><th style="width:30%">Stopped</th><th>Approx. RAM</th></tr></thead>
+<tbody>
+<tr><td><strong>Train</strong></td><td>MATLAB desktop running <code>trainnet</code>, one terminal</td>
+<td>Docker, FastAPI, Vite, browser tabs</td><td>MATLAB 6–8 GB</td></tr>
+<tr><td><strong>Develop</strong></td><td>MATLAB desktop as a shared engine, FastAPI, Vite, Docker
+capped at 4 GB, one browser</td><td>—</td><td>13–14 GB</td></tr>
+<tr><td><strong>Demo</strong></td><td>As Develop, MATLAB minimised</td><td>IDE, chat apps, extra
+tabs</td><td>~12 GB</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+<p><strong>The single biggest saving: one MATLAB process, not two.</strong>
+<code>matlab.engine.start_matlab()</code> launches a <em>second</em> MATLAB alongside your
+desktop session — roughly 2–3 GB you do not have. Instead, run
+<code>matlab.engine.shareEngine("netrasetu")</code> in your open MATLAB and have FastAPI call
+<code>connect_matlab("netrasetu")</code>. One process, and you can watch the pipeline execute
+in the desktop while the demo runs.</p>
+</div>
+</section>
+
+<!-- ══════════════ 20 ══════════════ -->
+<section id="s20">
+<h2><span class="n">Section 20</span>Compute — is a Colab T4 needed?</h2>
+<p class="lede">No. And using it would actively weaken your submission.</p>
+
+<h3>Three reasons</h3>
+<p><strong>Colab does not run your stack.</strong> Colab is a Python notebook service. Training
+there means rewriting the model in PyTorch or TensorFlow, which moves your core algorithm out of
+MATLAB on a MathWorks problem statement. Section 4 explains why that is the fastest available way
+to lose.</p>
+
+<p><strong>Your GPU is not the bottleneck.</strong> The RTX 3060 Laptop offers FP32 throughput
+in the same class as a T4. The T4's real advantage is memory — 16 GB against your 6 GB — and
+that is solved with batch size and resolution, not with a different machine.</p>
+
+<p><strong>The datasets are small.</strong> APTOS is 3,662 images. IDRiD's segmentation set is
+81. DRIVE is 40. These train on a laptop GPU in hours, not days. Colab's free-tier session limits
+would interrupt runs that your own machine completes uninterrupted.</p>
+
+<h3>Fitting into 6 GB of VRAM</h3>
+<table>
+<thead><tr><th style="width:30%">Model</th><th style="width:20%">Input</th><th style="width:20%">Starting batch</th><th>If out of memory</th></tr></thead>
+<tbody>
+<tr><td>EfficientNet-b0 grading backbone</td><td>512 × 512</td><td>16</td><td>8, then 384 px</td></tr>
+<tr><td>ResNet-50 (ablation only)</td><td>512 × 512</td><td>8</td><td>4, then 384 px</td></tr>
+<tr><td>Vessel U-Net</td><td>48 × 48 patches</td><td>64</td><td>32</td></tr>
+<tr><td>Microaneurysm candidate CNN</td><td>32 × 32 patches</td><td>128</td><td>64</td></tr>
+</tbody>
+</table>
+<p>These are starting points to tune, not guarantees. Two habits prevent most failures: call
+<code>reset(gpuDevice)</code> before every run, and set a <code>CheckpointPath</code> so a
+thermal shutdown or out-of-memory error at epoch 22 costs you one epoch, not twenty-two.</p>
+
+<pre><code>reset(gpuDevice);
+opts = trainingOptions("adam", ...
+    MiniBatchSize        = 16, ...        % halve on "out of memory on device"
+    MaxEpochs            = 30, ...
+    InitialLearnRate     = 1e-4, ...
+    ExecutionEnvironment = "gpu", ...
+    Shuffle              = "every-epoch", ...
+    ValidationData       = dsVal, ...
+    ValidationFrequency  = 50, ...
+    CheckpointPath       = "checkpoints", ...
+    Plots                = "training-progress", ...
+    Verbose              = false);
+net = trainnet(dsTrain, net, "mse", opts);   % ordinal regression head</code></pre>
+
+<div class="note">
+<p><strong>When you would genuinely need more compute.</strong> Only if you scale segmentation
+training to FGADR or DDR at full resolution. The MATLAB-native answer then is MATLAB on a cloud
+GPU VM — not Colab — so the code does not change. For this hackathon, you will not reach that
+point.</p>
+</div>
+</section>
+
+<!-- ══════════════ 21 ══════════════ -->
+<section id="s21">
+<h2><span class="n">Section 21</span>Installation</h2>
+<p class="lede">In this order. Each step's verification is the gate for the next.</p>
+
+<h3>1 · Machine preparation</h3>
+<pre><code># PowerShell as Administrator (all blocks in this section are PowerShell)
+mkdir C:\dev\netrasetu
+wsl --install            # skip if WSL is already present
+wsl --update
+nvidia-smi               # must list the RTX 3060 and a driver version</code></pre>
+<p>Install the latest NVIDIA driver for the RTX 3060 from NVIDIA's site before anything else.
+Then install Docker Desktop and leave the WSL2 backend selected (it is the only option on Windows
+Home). You do <em>not</em> need the CUDA Toolkit for training — the driver is sufficient. The
+CUDA Toolkit is only needed for the GPU Coder edge path, which is roadmap, not build.</p>
+
+<h3>2 · MATLAB R2026a and toolboxes</h3>
+<p>Sign in to the MathWorks installer with your campus licence and select exactly these:</p>
+<table>
+<thead><tr><th style="width:44%">Product</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>MATLAB, Simulink</td><td>Core</td></tr>
+<tr><td>Image Processing Toolbox, Computer Vision Toolbox</td><td>Quality gate, enhancement, lesion detection</td></tr>
+<tr><td>Deep Learning Toolbox</td><td>Backbone, U-Net, <code>gradCAM</code></td></tr>
+<tr><td><strong>Parallel Computing Toolbox</strong></td><td>Required for GPU training. The one most
+teams forget, then discover when <code>ExecutionEnvironment="gpu"</code> errors</td></tr>
+<tr><td>Statistics and Machine Learning Toolbox</td><td><code>fitcensemble</code> fusion, bootstrap CIs</td></tr>
+<tr><td>Medical Imaging Toolbox</td><td>Medical Image Labeler</td></tr>
+<tr><td>SimEvents</td><td>Capacity model</td></tr>
+<tr><td>MATLAB Report Generator</td><td>Clinical PDF report</td></tr>
+</tbody>
+</table>
+<p>Then verify the GPU from the MATLAB command window — this is gate G1:</p>
+<pre><code>validateGPU                                  % full diagnostic, since R2024b
+g = gpuDevice;
+fprintf("%s  cc %s  %.1f GB free\n", g.Name, g.ComputeCapability, g.AvailableMemory/2^30);
+
+net = imagePretrainedNetwork("efficientnetb0");   % prompts for the add-on if missing</code></pre>
+
+<h3>3 · Python environment</h3>
+<pre><code>cd C:\dev\netrasetu
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+# if blocked: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+python -m pip install --upgrade pip
+pip install matlabengine `
+            fastapi "uvicorn[standard]" pydantic python-multipart `
+            "pyjwt[crypto]" "psycopg[binary]" boto3 "pyvips[binary]" `
+            prometheus-client kaggle pytest httpx locust
+
+python -c "import matlab.engine; print('engine ok')"</code></pre>
+<p>The engine package must match your MATLAB release exactly: each version works only with
+the release it was built for. On a fresh install the latest package matches the latest MATLAB, so
+install it unpinned, then record the exact version with <code>pip show matlabengine</code> and pin
+that in <code>requirements.txt</code> so every teammate gets the same one. If anyone stays on an
+older release, they need that release's engine version from the PyPI release history.</p>
+
+<h3>4 · Front end</h3>
+<pre><code>node --version          # needs 20.19+ or 22.12+
+cd C:\dev\netrasetu
+npm create vite@latest web -- --template react-ts
+cd web
+npm install
+npm install openseadragon dexie i18next react-i18next recharts lucide-react `
+            @fontsource/ibm-plex-sans @fontsource/ibm-plex-sans-devanagari @fontsource/ibm-plex-mono
+npm install -D vite-plugin-pwa tailwindcss @tailwindcss/vite vitest `
+               @playwright/test @axe-core/playwright openapi-typescript
+npx playwright install chromium
+npm run dev             # if esbuild fails here, see the npm 12 note in Section 19</code></pre>
+<p><code>vite-plugin-pwa</code> is the single pick for wiring Workbox into Vite — it generates the
+service worker and manifest from config instead of hand-written files.</p>
+
+<h3>5 · Datasets</h3>
+<pre><code># place kaggle.json in %USERPROFILE%\.kaggle\ and accept the competition rules on Kaggle first
+kaggle competitions download -c aptos2019-blindness-detection -p data\aptos
+# IDRiD — IEEE DataPort (free account)      → data\idrid
+# DRIVE — grand-challenge.org (registration) → data\drive
+# Messidor-2 — ADCIS request form            → data\messidor2   (never opened until test day)</code></pre>
+
+<h3>6 · Showcase CLIs — Tier 1 only</h3>
+<pre><code>npm install -g vercel
+# Railway: install via Scoop to avoid npm 12's install-script blocking
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression   # run as a normal user, not Administrator
+scoop install railway
+vercel --version
+railway --version</code></pre>
+<p>Skip this step entirely if you are only building Tier 0. Neither CLI is needed for the
+classroom demo.</p>
+</section>
+
+<!-- ══════════════ 22 ══════════════ -->
+<section id="s22">
+<h2><span class="n">Section 22</span>Configuration</h2>
+<p class="lede">One <code>.env</code> as the single source of truth. Everything else reads from it,
+and it is never committed.</p>
+
+<h3>WSL2 memory cap</h3>
+<p>Without this, WSL2 can take up to half your RAM and Docker will starve MATLAB. Create
+<code>%USERPROFILE%\.wslconfig</code>, then run <code>wsl --shutdown</code> to apply.</p>
+<pre><code>[wsl2]
+memory=4GB
+processors=4
+swap=2GB</code></pre>
+
+<h3>.env — repository root</h3>
+<pre><code># ── generate secrets with:  python -c "import secrets; print(secrets.token_hex(32))"
+
+# identity
+KEYCLOAK_TAG=latest                 # pin to the exact tag after first pull
+KEYCLOAK_ADMIN=admin
+KEYCLOAK_ADMIN_PASSWORD=replace-me
+OIDC_ISSUER=http://localhost:8080/realms/netrasetu
+OIDC_AUDIENCE=netrasetu-gateway
+
+# database
+POSTGRES_USER=netrasetu
+POSTGRES_PASSWORD=replace-me
+POSTGRES_DB=netrasetu
+DATABASE_URL=postgresql://netrasetu:replace-me@localhost:5432/netrasetu
+
+# object storage — Garage
+S3_ENDPOINT=http://localhost:3900
+S3_REGION=garage
+S3_BUCKET=netrasetu
+S3_ACCESS_KEY=                      # filled from `garage key create`
+S3_SECRET_KEY=
+
+# observability
+PROMETHEUS_TAG=latest
+GRAFANA_TAG=latest
+
+# gateway
+GATEWAY_MODE=inprocess              # inprocess (Tier 0) | queue (Tier 1)
+MATLAB_SHARED_ENGINE=netrasetu
+NX_ROOT=C:/dev/netrasetu/matlab
+CORS_ORIGINS=http://localhost:5173,http://192.168.137.1:5173
+NX_CACHED_MODE=false                # true = serve from inference cache only, never call MATLAB
+
+# caching (Section 26)
+CACHE_ENABLED=true
+IDEMPOTENCY_TTL_DAYS=7
+PRESIGN_TTL_SECONDS=3600            # reuse each URL for its lifetime so browser caching works
+JWKS_CACHE_SECONDS=3600</code></pre>
+<p>Commit a <code>.env.example</code> with every key and no values. Then
+<code>git check-ignore .env</code> should print <code>.env</code> — if it prints nothing, stop and
+fix <code>.gitignore</code> before your first commit.</p>
+
+<h3>docker-compose.yml</h3>
+<pre><code>name: netrasetu
+services:
+  postgres:
+    image: postgres:17
+    env_file: .env
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./platform/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      retries: 10
+    mem_limit: 512m
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_TAG}
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports: ["8080:8080"]
+    volumes: ["./platform/keycloak:/opt/keycloak/data/import:ro"]
+    mem_limit: 1g
+
+  garage:
+    image: dxflrs/garage:v2.3.0
+    ports: ["3900:3900", "3903:3903"]
+    volumes:
+      - ./platform/garage/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    mem_limit: 256m
+
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_TAG}
+    volumes: ["./platform/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    mem_limit: 256m
+
+  grafana:
+    image: grafana/grafana-oss:${GRAFANA_TAG}
+    ports: ["3000:3000"]
+    volumes:
+      - ./platform/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./platform/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    mem_limit: 256m
+
+volumes: { pgdata: {}, garage-meta: {}, garage-data: {} }</code></pre>
+<p>The memory limits sum to about 2.3 GB, inside the 4 GB WSL cap with headroom. Once all five
+images pull successfully, run <code>docker compose images</code> and replace every
+<code>latest</code> in <code>.env</code> with the exact tag shown. Unpinned images are how a
+working demo breaks the night before.</p>
+
+<h3>platform/garage/garage.toml</h3>
+<p>Garage reads secrets from this file directly, so commit only
+<code>garage.toml.example</code> and gitignore the real one.</p>
+<pre><code>metadata_dir       = "/var/lib/garage/meta"
+data_dir           = "/var/lib/garage/data"
+db_engine          = "sqlite"
+replication_factor = 1
+
+rpc_bind_addr   = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+rpc_secret      = "PASTE_64_HEX_CHARS"
+
+[s3_api]
+s3_region     = "garage"
+api_bind_addr = "[::]:3900"
+root_domain   = ".s3.garage.localhost"
+
+[admin]
+api_bind_addr = "[::]:3903"
+admin_token   = "PASTE_TOKEN"
+metrics_token = "PASTE_TOKEN"</code></pre>
+
+<p>Initialise the single-node layout once. The Garage image ships without a shell, so every
+command goes through the binary directly:</p>
+<pre><code>docker compose up -d
+docker compose exec garage /garage status                 # copy the node ID
+docker compose exec garage /garage layout assign -z dc1 -c 20G &lt;NODE_ID&gt;
+docker compose exec garage /garage layout apply --version 1
+docker compose exec garage /garage bucket create netrasetu
+docker compose exec garage /garage key create netrasetu-app   # → S3_ACCESS_KEY / S3_SECRET_KEY
+docker compose exec garage /garage bucket allow --read --write --owner netrasetu --key netrasetu-app</code></pre>
+
+<h3>platform/prometheus/prometheus.yml</h3>
+<pre><code>global: { scrape_interval: 15s }
+scrape_configs:
+  - job_name: gateway
+    metrics_path: /metrics
+    static_configs: [{ targets: ["host.docker.internal:8000"] }]</code></pre>
+<p>An honest note on where metrics come from. In production, MPS emits custom Prometheus metrics
+straight from MATLAB code. In the prototype there is no MPS, so the gateway translates each
+MATLAB result into counters — <code>netrasetu_quality_reject_total{reason=…}</code> is
+incremented in Python from the <code>failureMode</code> field MATLAB returns. Same metric names,
+so Grafana dashboards carry over unchanged when you move to Tier 2.</p>
+
+<h3>Keycloak realm</h3>
+<p>Create the realm once in the admin console at <code>localhost:8080</code>: realm
+<code>netrasetu</code>; roles <code>screener</code>, <code>grader</code>, <code>admin</code>;
+client <code>netrasetu-web</code> as a public client with PKCE; client
+<code>netrasetu-gateway</code> as the token audience; OTP as a required action for grader and
+admin. Then use Realm settings → Action → Partial export and save it as
+<code>platform/keycloak/realm-export.json</code>. Partial export masks client secrets, so the
+file is safe to commit, and <code>--import-realm</code> recreates the realm on any teammate's
+machine.</p>
+
+<h3>MATLAB — nx_config.m</h3>
+<pre><code>function cfg = nx_config()
+%NX_CONFIG  Single source of pipeline configuration. Read once, then cached.
+    persistent c
+    if isempty(c)
+        root = fileparts(fileparts(mfilename("fullpath")));
+        t = jsondecode(fileread(fullfile(root, "config", "threshold.json")));
+        c.threshold     = t.pReferable;    % written by eval/ — never edited by hand
+        c.thresholdHash = t.sha256;        % CI checks this against validation output
+        c.inputSize     = [512 512];
+        c.modelFile     = fullfile(root, "models", "netrasetu_v1.mat");
+        c.modelVer      = "netrasetu_v1";   % part of every cache key — bump on retrain
+        c.maxRetakes    = 3;
+        c.dupWindowDays = 30;
+        c.useGPU        = canUseGPU();
+    end
+    cfg = c;
+end</code></pre>
+<p><code>threshold.json</code> is written by the validation script, never by a person. It records
+the operating point, the split it was chosen on, and a hash. That file is your evidence that the
+threshold was frozen on validation rather than tuned on test.</p>
+
+<h3>web/vercel.json — Tier 1 only</h3>
+<pre><code>{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "headers": [
+    { "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+    { "source": "/(.*)",
+      "headers": [
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000" },
+        { "key": "X-Content-Type-Options",    "value": "nosniff" },
+        { "key": "Referrer-Policy",           "value": "no-referrer" },
+        { "key": "Permissions-Policy",        "value": "camera=(self), microphone=()" }
+      ] }
+  ]
+}</code></pre>
+<p>Two of these headers are product decisions, not boilerplate. <code>Referrer-Policy:
+no-referrer</code> stops a patient's single-use token from leaking to any third-party site via
+the Referer header. <code>no-cache</code> on the service worker means a fixed bug reaches field
+devices on next load instead of being pinned in cache for days.</p>
+</section>
+
+<!-- ══════════════ 23 ══════════════ -->
+<section id="s23">
+<h2><span class="n">Section 23</span>Integration</h2>
+<p class="lede">One rule governs everything here: MATLAB returns JSON text, never a struct.</p>
+
+<h3>The contract, refined</h3>
+<p>The MATLAB Engine for Python converts MATLAB structs into Python dictionaries and numeric
+arrays into its own array type. Nested structs, empty fields and string arrays convert in ways
+that differ subtly from what you expect, and every one of those differences becomes a front-end
+bug. So wrap the frozen entry point once:</p>
+<pre><code>function txt = netrasetu_analyze_json(imgPath, outDir)
+%NETRASETU_ANALYZE_JSON  Engine-facing wrapper. Returns JSON text only.
+    out = netrasetu_analyze(imgPath, outDir);
+    txt = jsonencode(out, PrettyPrint=false);
+end</code></pre>
+<p>Python calls <code>json.loads()</code> on the result. MATLAB owns serialisation, so there is
+exactly one place where types are decided.</p>
+
+<h3>Pattern A — in-process, Tier 0</h3>
+<pre><code># service/main.py  (essential parts)
+import json, os, threading, tempfile
+from contextlib import asynccontextmanager
+import matlab.engine
+from fastapi import FastAPI, UploadFile, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import Counter, Histogram, make_asgi_app
+from .auth import require_role
+
+REJECTS = Counter("netrasetu_quality_reject_total", "Quality rejections", ["reason"])
+GRADES  = Counter("netrasetu_grade_total", "Grades issued", ["grade", "decision"])
+LATENCY = Histogram("netrasetu_analyze_seconds", "MATLAB pipeline time")
+
+eng, lock = None, threading.Lock()      # one engine executes one call at a time
+
+@asynccontextmanager
+async def lifespan(app):
+    global eng
+    name = os.getenv("MATLAB_SHARED_ENGINE")
+    eng = matlab.engine.connect_matlab(name) if name else matlab.engine.start_matlab("-nodesktop")
+    eng.addpath(eng.genpath(os.environ["NX_ROOT"]), nargout=0)
+    eng.nx_warmup(nargout=0)            # first call pays model load — not the judge
+    yield
+    if not name:
+        eng.quit()
+
+app = FastAPI(title="NetraSetu gateway", lifespan=lifespan)
+app.add_middleware(CORSMiddleware,
+    allow_origins=os.environ["CORS_ORIGINS"].split(","),
+    allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
+app.mount("/metrics", make_asgi_app())
+
+@app.post("/analyze")
+def analyze(file: UploadFile, user=Depends(require_role("screener"))):
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "in.jpg")
+        with open(path, "wb") as f:
+            f.write(file.file.read())
+        with lock, LATENCY.time():
+            out = json.loads(eng.netrasetu_analyze_json(path, d, nargout=1))
+    if out["decision"] == "RETAKE":
+        REJECTS.labels(out["quality"]["failureMode"]).inc()
+    else:
+        GRADES.labels(str(out["grade"]), out["decision"]).inc()
+    return out</code></pre>
+<p>Note <code>def</code>, not <code>async def</code>. FastAPI runs sync endpoints in a thread
+pool, so a ten-second MATLAB call does not freeze every other request. The lock serialises calls
+into the single engine, which is exactly the single-server behaviour your SimEvents model
+assumes.</p>
+<p>In the build, the endpoint does not call the engine directly. It calls
+<code>analyze_cached</code> from Section 26, which handles retries, the cross-patient check and
+the inference cache before MATLAB is ever reached.</p>
+
+<h3>Pattern B — pull worker, Tier 1</h3>
+<p>When the gateway is in the cloud and MATLAB is on your laptop, the obvious design is a tunnel
+from the internet into your laptop. Don't. Invert it: the laptop <em>pulls</em> work over an
+outbound connection. No open port, no tunnel, and when your laptop sleeps, jobs wait in the
+queue instead of failing.</p>
+<pre><code># service/worker.py
+import json, os, tempfile, time, psycopg, boto3
+from botocore.config import Config
+import matlab.engine
+
+CLAIM = """
+UPDATE job SET status = 'running', claimed_at = now(), worker = %(w)s
+WHERE id = (SELECT id FROM job WHERE status = 'queued'
+            ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1)
+RETURNING id, object_key;
+"""
+s3 = boto3.client("s3", endpoint_url=os.environ["S3_ENDPOINT"],
+                  config=Config(s3={"addressing_style": "path"}))
+eng = matlab.engine.connect_matlab(os.environ["MATLAB_SHARED_ENGINE"])
+
+with psycopg.connect(os.environ["DATABASE_URL"], autocommit=True) as db:
+    while True:
+        row = db.execute(CLAIM, {"w": os.environ["WORKER_ID"]}).fetchone()
+        if not row:
+            time.sleep(2); continue
+        job_id, key = row
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                src = os.path.join(d, "in.jpg")
+                s3.download_file(os.environ["S3_BUCKET"], key, src)
+                out = json.loads(eng.netrasetu_analyze_json(src, d, nargout=1))
+                # upload evidence crops, tiles and report from d, then:
+                db.execute("UPDATE job SET status='done', result=%s WHERE id=%s",
+                           (json.dumps(out), job_id))
+        except Exception as e:
+            db.execute("UPDATE job SET status='failed', error=%s WHERE id=%s",
+                       (str(e)[:500], job_id))</code></pre>
+<p><code>FOR UPDATE SKIP LOCKED</code> makes the claim atomic, so two teammates can each run a
+worker and never grade the same image twice. Add a reaper that resets jobs stuck in
+<code>running</code> for more than ten minutes. Path-style addressing is set explicitly because
+virtual-host bucket addressing needs DNS you will not have configured.</p>
+
+<p>Look at what this pattern is: a node that works offline, syncs results not images, and
+reconnects when it can. It is the edge architecture from Section 4, running on your laptop. Say
+so in the pitch.</p>
+
+<h3>Shared types — contract drift becomes a compile error</h3>
+<pre><code>npx openapi-typescript http://localhost:8000/openapi.json -o src/api/schema.d.ts</code></pre>
+<p>FastAPI publishes an OpenAPI document automatically. Generating TypeScript types from it means
+that when a MATLAB field is renamed and the Pydantic model updated, the front end fails to
+compile rather than failing in front of a judge. Regenerate on every contract change.</p>
+
+<h3>Deep-zoom tiles</h3>
+<p>Generate tiles with <code>pyvips</code> — <code>image.dzsave()</code> writes the Deep Zoom
+format OpenSeadragon reads natively. The console then requests tiles from the object store using
+presigned URLs, so 25 MB fundus images never pass through FastAPI.</p>
+
+<h3>Integration checkpoints</h3>
+<table>
+<thead><tr><th style="width:12%">Hour</th><th style="width:40%">Checkpoint</th><th>Proves</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Stubbed MATLAB returns canned JSON through FastAPI into all four routes</td>
+<td>Every interface exists. Integration is never a cliff later</td></tr>
+<tr><td>4</td><td>Real quality gate; retake guidance appears on the phone</td><td>MATLAB → phone round trip</td></tr>
+<tr><td>7</td><td>Real grading, evidence crops, tiles in OpenSeadragon</td><td>Full pipeline end to end</td></tr>
+<tr><td>8</td><td>Reject counters visible in Grafana after five test uploads</td><td>Observability is wired, not mocked</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- ══════════════ 24 ══════════════ -->
+<section id="s24">
+<h2><span class="n">Section 24</span>Testing</h2>
+<p class="lede">Nine layers. Each answers a different question, and the clinical validation
+gate outranks all the others.</p>
+
+<table>
+<thead><tr><th style="width:18%">Layer</th><th style="width:22%">Tool</th><th style="width:40%">Proves</th><th>Runs</th></tr></thead>
+<tbody>
+<tr><td>MATLAB unit</td><td><code>matlab.unittest</code></td><td>Quality gate rejects known
+degradations; contract is JSON-safe</td><td>Laptop, CI</td></tr>
+<tr><td>Golden regression</td><td><code>matlab.unittest</code></td><td>The six demo images
+still produce their frozen outputs</td><td>Laptop</td></tr>
+<tr><td><strong>Clinical validation</strong></td><td><code>eval/run_validation.m</code></td>
+<td>Sensitivity, specificity with CIs, QWK, LLP, ECE at the frozen threshold</td><td>Laptop (GPU)</td></tr>
+<tr><td>Gateway</td><td>pytest + FastAPI TestClient</td><td>Role boundaries, schema rejection,
+single-use tokens, audit-chain integrity</td><td>Laptop, CI</td></tr>
+<tr><td>Front-end unit</td><td>Vitest</td><td>Posterior band, Evidence Strip, every i18n key
+present in all three languages</td><td>Laptop, CI</td></tr>
+<tr><td>End to end</td><td>Playwright + axe</td><td>Offline capture then sync; keyboard review
+flow; accessibility</td><td>Laptop, CI</td></tr>
+<tr><td>Load</td><td>Locust</td><td>Measured service time — which becomes a SimEvents
+parameter</td><td>Laptop</td></tr>
+<tr><td>Security</td><td>OWASP ZAP baseline</td><td>Headers, cookies, common injection —
+a rehearsal for the CERT-In assessment</td><td>Laptop</td></tr>
+<tr><td>Caching</td><td>pytest</td><td>Retries are idempotent; hits still create a per-patient study;
+same pixels on another patient are flagged; clinical routes send <code>no-store</code></td><td>Laptop, CI</td></tr>
+</tbody>
+</table>
+
+<h3>MATLAB — the quality gate must reject what it claims to reject</h3>
+<pre><code>classdef tQualityGate &lt; matlab.unittest.TestCase
+    properties (TestParameter)
+        sigma = {4, 8, 12};
+    end
+    methods (Test)
+        function rejectsDefocus(tc, sigma)
+            I = imread("fixtures/grade0_clean.jpg");
+            p = fullfile(tempdir, "blur.jpg");
+            imwrite(imgaussfilt(I, sigma), p);
+            q = nx_quality(p);
+            tc.verifyEqual(q.verdict, "reject");
+            tc.verifyEqual(q.failureMode, "defocus");
+        end
+        function contractIsJsonSafe(tc)
+            txt = netrasetu_analyze_json("fixtures/grade2_haem.jpg", tempdir);
+            out = jsondecode(txt);
+            tc.verifyTrue(all(isfield(out, ["studyId" "decision" "quality"])));
+        end
+    end
+end</code></pre>
+<pre><code>results = runtests("tests");
+assertSuccess(results);</code></pre>
+<p>The defocus test reuses the synthetic-degradation idea from Module 1: the same transforms you
+used to generate training data become the test fixtures. If the gate stops rejecting σ = 8 blur,
+you know before a judge does.</p>
+
+<h3>Gateway — the security boundaries are tests, not intentions</h3>
+<pre><code>def test_screener_cannot_read_other_facility(client, token_for):
+    t = token_for(role="screener", facility="ambegaon")
+    r = client.get("/study/khed-0001", headers={"Authorization": f"Bearer {t}"})
+    assert r.status_code == 404     # not 403: never confirm the record exists
+
+def test_patient_link_is_single_use(client, patient_link):
+    assert client.get(patient_link).status_code == 200
+    assert client.get(patient_link).status_code == 410
+
+def test_audit_chain_detects_tampering(db, audit_rows):
+    db.execute("UPDATE audit SET action = 'edited' WHERE seq = 3")
+    assert verify_chain(db) == 3    # first broken link is reported</code></pre>
+<p>The 404 rather than 403 is deliberate. A 403 tells an attacker the Khed record exists; a 404
+tells them nothing. The audit test is your proof that the hash chain is real — run it live if a
+judge asks how the audit trail resists tampering.</p>
+
+<h3>End to end — the offline claim is tested, not asserted</h3>
+<pre><code>test('capture survives a dead network and syncs later', async ({ page, context }) =&gt; {
+  await page.goto('/field');
+  await context.setOffline(true);
+  await page.setInputFiles('input[type=file]', 'fixtures/grade2_haem.jpg');
+  await expect(page.getByText('1 waiting to sync')).toBeVisible();
+  await context.setOffline(false);
+  await expect(page.getByText('0 waiting to sync')).toBeVisible({ timeout: 30_000 });
+});</code></pre>
+<div class="note warn">
+<p><strong>Be precise about what "offline" means in the prototype.</strong> The field app
+captures and queues offline; grading happens when the queue syncs to the laptop. Fully on-device
+grading is the Jetson edge path. Say this exactly — Scenario A describes the product, and a judge
+who asks "does it grade with no network?" deserves the accurate answer. It is in the
+limitations list in Section 16 for that reason.</p>
+</div>
+
+<h3>Load — the test that feeds the simulation</h3>
+<pre><code># tests/load/locustfile.py
+from locust import HttpUser, task, between
+
+class Screener(HttpUser):
+    wait_time = between(1, 3)
+    @task
+    def analyze(self):
+        with open("fixtures/grade2_haem.jpg", "rb") as f:
+            self.client.post("/analyze", files={"file": f}, headers=AUTH)</code></pre>
+<pre><code>locust -f tests/load/locustfile.py --headless -u 4 -r 1 -t 5m --csv results/load</code></pre>
+<p>Because the engine serialises calls, this measures single-server service time — p50 and p95 —
+which is precisely the Entity Server parameter in Figure 4. Your capacity model now runs on a
+measured number. This is the sentence that makes the Simulink module credible.</p>
+
+<h3>Caching — the safety properties are tests</h3>
+<pre><code>def test_retry_returns_same_study(client, screener, image):
+    h = {"Idempotency-Key": str(uuid.uuid4()), **screener}
+    a = client.post("/analyze", files={"file": image}, headers=h).json()
+    b = client.post("/analyze", files={"file": image}, headers=h).json()
+    assert a["studyId"] == b["studyId"]
+
+def test_cache_hit_still_creates_new_study(client, screener, image, db):
+    a = client.post("/analyze", files={"file": image}, headers=screener).json()
+    b = client.post("/analyze", files={"file": image}, headers=screener).json()
+    assert a["studyId"] != b["studyId"]
+    assert audit_source(db, b["studyId"]) == "cache"
+
+def test_same_pixels_other_patient_is_flagged(client, token_for, image):
+    client.post("/analyze", files={"file": image}, headers=token_for(patient="P1"))
+    r = client.post("/analyze", files={"file": image}, headers=token_for(patient="P2")).json()
+    assert r["flag"] == "same_image_other_patient" and r.get("grade") is None
+
+def test_clinical_routes_are_never_cached(client, screener, image):
+    r = client.post("/analyze", files={"file": image}, headers=screener)
+    assert r.headers["Cache-Control"] == "no-store"
+
+def test_new_model_version_misses_cache(db, image, version):
+    analyze_cached(db, image, "P1", None, fake_matlab, version)
+    assert analyze_cached(db, image, "P1", None, fake_matlab,
+                          {**version, "modelVer": "v2"})["source"] == "matlab"</code></pre>
+<p>The third test is the one to show a judge. It proves that a cache built for speed cannot hand
+one patient's result to another.</p>
+
+<h3>Security rehearsal</h3>
+<pre><code>docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:8000</code></pre>
+
+<h3>Continuous integration</h3>
+<pre><code># .github/workflows/ci.yml
+name: ci
+on: [push, pull_request]
+jobs:
+  matlab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: matlab-actions/setup-matlab@v2      # use the current major version
+        with:
+          release: R2026a
+          products: Image_Processing_Toolbox Computer_Vision_Toolbox Deep_Learning_Toolbox Statistics_and_Machine_Learning_Toolbox
+      - uses: matlab-actions/run-tests@v2
+        with: { select-by-folder: matlab/tests }
+  gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r service/requirements-gateway.txt pytest httpx
+      - run: pytest service/tests
+      - run: python eval/check_threshold_hash.py   # threshold.json must match validation.json
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: cd web &amp;&amp; npm ci &amp;&amp; npx vitest run &amp;&amp; npx playwright install --with-deps chromium &amp;&amp; npx playwright test</code></pre>
+<p>MathWorks offers MATLAB on GitHub Actions for public repositories, which makes your repo's
+green badge a credible signal. Clinical validation stays on your laptop — it needs the GPU and the
+data — but CI enforces its integrity: <code>check_threshold_hash.py</code> fails the build if
+anyone edits <code>threshold.json</code> without regenerating validation results. That one check
+is your answer to "how do I know you didn't tune on test?"</p>
+</section>
+
+<!-- ══════════════ 25 ══════════════ -->
+<section id="s25">
+<h2><span class="n">Section 25</span>Deployment</h2>
+<p class="lede">Three tiers. You ship Tier 0, you share Tier 1, you pitch Tier 2.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 510" role="img" aria-label="Three deployment tiers side by side">
+<style>
+  .dt-f{fill:#fff;stroke:#12171C;stroke-width:1.4}
+  .dt-fd{fill:#fff;stroke:#7C8B98;stroke-width:1.1;stroke-dasharray:5 3}
+  .dt-b{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .dt-k{fill:#E6F1F2;stroke:#0E7C86;stroke-width:1.4}
+  .dt-H{font-size:12.5px;fill:#12171C;font-weight:600}
+  .dt-t{font-size:11px;fill:#12171C}
+  .dt-s{font-size:9.4px;fill:#5E6B75}
+  .dt-m{font-size:9.2px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .dt-a{stroke:#5E6B75;stroke-width:1.2;fill:none;marker-end:url(#ar)}
+  .dt-2{stroke:#0E7C86;stroke-width:1.4;fill:none;marker-end:url(#arT);marker-start:url(#arT)}
+</style>
+
+<text class="dt-H" x="14"  y="24">Tier 0 — Classroom</text>
+<text class="dt-H" x="316" y="24">Tier 1 — Public showcase</text>
+<text class="dt-H" x="618" y="24">Tier 2 — Production</text>
+
+<!-- Tier 0 -->
+<rect class="dt-b" x="40" y="40" width="234" height="44" rx="3"/>
+<text class="dt-t" x="52" y="58">Phone on laptop hotspot</text>
+<text class="dt-m" x="52" y="74">192.168.137.1:5173</text>
+<path class="dt-a" d="M157 84 L157 108"/>
+<rect class="dt-f" x="14" y="110" width="286" height="360" rx="4"/>
+<text class="dt-m" x="26" y="128">i7-11800H · 16 GB · RTX 3060 6 GB</text>
+<rect class="dt-b" x="30" y="140" width="254" height="34" rx="3"/>
+<text class="dt-t" x="42" y="161">Vite dev server  :5173</text>
+<path class="dt-a" d="M157 174 L157 190"/>
+<rect class="dt-b" x="30" y="192" width="254" height="40" rx="3"/>
+<text class="dt-t" x="42" y="209">FastAPI gateway  :8000</text>
+<text class="dt-s" x="42" y="224">auth · schema · Prometheus counters</text>
+<path class="dt-a" d="M157 232 L157 248"/>
+<rect class="dt-k" x="30" y="250" width="254" height="44" rx="3"/>
+<text class="dt-t" x="42" y="268" font-weight="600">MATLAB R2026a — shared engine</text>
+<text class="dt-s" x="42" y="284">one process · GPU via Parallel Computing</text>
+<rect class="dt-fd" x="30" y="310" width="254" height="146" rx="3"/>
+<text class="dt-m" x="40" y="326">Docker Desktop · WSL2 · 4 GB cap</text>
+<rect class="dt-b" x="40" y="336" width="112" height="28" rx="3"/><text class="dt-s" x="50" y="354">Postgres 17</text>
+<rect class="dt-b" x="162" y="336" width="112" height="28" rx="3"/><text class="dt-s" x="172" y="354">Keycloak</text>
+<rect class="dt-b" x="40" y="372" width="112" height="28" rx="3"/><text class="dt-s" x="50" y="390">Garage v2.3</text>
+<rect class="dt-b" x="162" y="372" width="112" height="28" rx="3"/><text class="dt-s" x="172" y="390">Prometheus</text>
+<rect class="dt-b" x="40" y="408" width="112" height="28" rx="3"/><text class="dt-s" x="50" y="426">Grafana</text>
+<text class="dt-s" x="14" y="490">Fully offline. This is the demo.</text>
+
+<!-- Tier 1 -->
+<rect class="dt-b" x="340" y="40" width="238" height="48" rx="3"/>
+<text class="dt-t" x="352" y="59">Vercel — static PWA build</text>
+<text class="dt-s" x="352" y="75">global CDN · real HTTPS · preview URLs</text>
+<path class="dt-a" d="M459 88 L459 110"/>
+<rect class="dt-fd" x="316" y="112" width="286" height="120" rx="4"/>
+<text class="dt-m" x="326" y="128">Railway · containers</text>
+<text class="dt-s" x="326" y="143" style="fill:#B3261E">Public datasets only — never real patient data</text>
+<rect class="dt-b" x="332" y="152" width="254" height="34" rx="3"/>
+<text class="dt-t" x="344" y="167">Gateway — queue mode</text>
+<text class="dt-s" x="344" y="180">same FastAPI image, no MATLAB inside</text>
+<rect class="dt-b" x="332" y="194" width="122" height="28" rx="3"/><text class="dt-s" x="342" y="212">Keycloak</text>
+<rect class="dt-b" x="464" y="194" width="122" height="28" rx="3"/><text class="dt-s" x="474" y="212">Grafana</text>
+<path class="dt-a" d="M586 169 L594 169 L594 242"/>
+<rect x="316" y="244" width="286" height="86" rx="4" fill="#fff" stroke="#0E7C86" stroke-width="1.3"/>
+<text class="dt-m" x="326" y="260" style="fill:#0E7C86">Supabase · ap-south-1 Mumbai</text>
+<rect class="dt-b" x="332" y="268" width="122" height="46" rx="3"/>
+<text class="dt-t" x="342" y="286">Postgres</text><text class="dt-s" x="342" y="302">jobs · cache · studies</text>
+<rect class="dt-b" x="464" y="268" width="122" height="46" rx="3"/>
+<text class="dt-t" x="474" y="286">Storage</text><text class="dt-s" x="474" y="302">S3 protocol</text>
+<path class="dt-2" d="M393 392 L393 318"/>
+<path class="dt-2" d="M525 392 L525 318"/>
+<text class="dt-m" x="400" y="352">claim job</text>
+<text class="dt-m" x="400" y="365">write result</text>
+<text class="dt-m" x="532" y="352">get image</text>
+<text class="dt-m" x="532" y="365">put artefacts</text>
+<rect class="dt-k" x="332" y="394" width="254" height="54" rx="3"/>
+<text class="dt-t" x="344" y="413" font-weight="600">Your laptop — grading worker</text>
+<text class="dt-s" x="344" y="429">MATLAB + RTX 3060</text>
+<text class="dt-s" x="344" y="442">outbound connections only</text>
+<text class="dt-s" x="316" y="472">Polls jobs, writes results. No tunnel, no open port.</text>
+<text class="dt-s" x="316" y="490">Laptop asleep → jobs wait in the queue.</text>
+
+<!-- Tier 2 -->
+<rect class="dt-b" x="642" y="40" width="238" height="44" rx="3"/>
+<text class="dt-t" x="654" y="58">All channels</text>
+<text class="dt-s" x="654" y="74">PWA · console · patient · eSanjeevani</text>
+<path class="dt-a" d="M761 84 L761 104"/>
+<rect class="dt-k" x="642" y="106" width="238" height="40" rx="3"/>
+<text class="dt-t" x="654" y="123">API gateway</text>
+<text class="dt-s" x="654" y="138">authN · consent · audit · rate limit</text>
+<path class="dt-a" d="M761 146 L761 162"/>
+<rect class="dt-b" x="642" y="164" width="238" height="28" rx="3"/>
+<text class="dt-t" x="654" y="183">Ingress / load balancer</text>
+<path class="dt-a" d="M761 192 L761 208"/>
+<rect class="dt-k" x="642" y="210" width="238" height="64" rx="3"/>
+<text class="dt-t" x="654" y="227" font-weight="600">MATLAB Production Server</text>
+<rect class="dt-b" x="654" y="236" width="64" height="26" rx="2"/><text class="dt-m" x="664" y="253">pod</text>
+<rect class="dt-b" x="726" y="236" width="64" height="26" rx="2"/><text class="dt-m" x="736" y="253">pod</text>
+<rect class="dt-b" x="798" y="236" width="70" height="26" rx="2"/><text class="dt-m" x="806" y="253">pod +N</text>
+<path class="dt-a" d="M761 274 L761 290"/>
+<rect class="dt-f" x="618" y="292" width="288" height="118" rx="4"/>
+<text class="dt-m" x="628" y="308">in-country region · ap-south-1 Mumbai</text>
+<rect class="dt-b" x="630" y="318" width="132" height="36" rx="3"/>
+<text class="dt-s" x="640" y="334">Managed Postgres</text><text class="dt-s" x="640" y="347">RLS · pgcrypto</text>
+<rect class="dt-b" x="770" y="318" width="124" height="36" rx="3"/>
+<text class="dt-s" x="780" y="334">S3 Object Lock</text><text class="dt-s" x="780" y="347">write-once raw images</text>
+<rect class="dt-b" x="630" y="362" width="132" height="36" rx="3"/>
+<text class="dt-s" x="640" y="384">Keycloak</text>
+<rect class="dt-b" x="770" y="362" width="124" height="36" rx="3"/>
+<text class="dt-s" x="780" y="384">Prometheus + Grafana</text>
+<rect class="dt-fd" x="618" y="424" width="288" height="40" rx="3"/>
+<text class="dt-t" x="630" y="442">Edge: GPU Coder → Jetson Orin</text>
+<text class="dt-s" x="630" y="456">for PHCs with no usable uplink</text>
+<text class="dt-s" x="618" y="490">Real patient data. CDSCO, DPDP, ABDM apply.</text>
+</svg>
+</div>
+<figcaption><b>Figure 8 — Deployment tiers.</b> The same MATLAB code runs in all three. What
+changes is where the grader lives: in-process on the laptop, pulling work from a cloud queue, or
+in autoscaled pods. Tier 1's two-way teal arrows are outbound connections from the laptop — the
+inversion that removes the need for any tunnel. Tier 1's data sits in Supabase's Mumbai region,
+so even the showcase keeps images in-country.</figcaption>
+</figure>
+
+<h3>Can Vercel, Railway and Supabase be used?</h3>
+<p>Yes — all three, for Tier 1 only, each for a narrow job. None of them can host the part of this
+system that matters most.</p>
+<table>
+<thead><tr><th style="width:14%"></th><th style="width:28%">Vercel</th><th style="width:28%">Railway</th><th>Supabase</th></tr></thead>
+<tbody>
+<tr><td>Verdict</td><td><span class="pill keep">use</span> front end only</td>
+<td><span class="pill keep">use</span> containers only</td>
+<td><span class="pill keep">use</span> data only</td></tr>
+<tr><td>Hosts</td><td>The static PWA build, from a global CDN with real HTTPS — which also fixes
+the phone camera and service-worker problem below</td><td>Gateway in queue mode, Keycloak,
+Grafana</td><td>Postgres (job queue, inference cache, study records) and Storage for images and
+tiles</td></tr>
+<tr><td>Cannot host</td><td>MATLAB. Short-lived serverless functions with a 300-second ceiling on
+Hobby</td><td>MATLAB. No documented GPU offering, and your campus licence normally only works on
+the campus network</td><td>MATLAB, or the Python gateway — its functions are not long-running
+Python processes</td></tr>
+<tr><td>Region</td><td>Global CDN</td><td>US, EU and Singapore — no India region</td>
+<td><strong>Mumbai, <code>ap-south-1</code></strong>, chosen at project creation</td></tr>
+<tr><td>Not used</td><td>Functions</td><td>Postgres and Bucket — moved to Supabase</td>
+<td>Auth, the browser-facing Data API, Edge Functions</td></tr>
+</tbody>
+</table>
+<p><strong>Why the data moved to Supabase.</strong> Railway has no India region; Supabase has
+Mumbai. For a showcase holding only public datasets, either is legally acceptable — but putting the
+database and images in-country even when it is not yet required means your Tier 1 already
+follows the data-residency rule Tier 2 must obey. And because the code is written against the
+Postgres and S3 protocols rather than any vendor's SDK, the switch is configuration only: no code
+changes at all.</p>
+<p><strong>Why Supabase Auth is not used.</strong> Keycloak issues the same tokens to the gateway,
+MATLAB Production Server and MATLAB Web App Server across all three tiers. Adding a second
+identity system for one tier would break the claim that Tiers 0, 1 and 2 share one realm
+configuration.</p>
+
+<h3>Tier 0 — classroom runbook</h3>
+<pre><code># start-demo.ps1 — run from C:\dev\netrasetu
+docker compose up -d
+docker compose ps                         # all five must show healthy or running
+
+# In the open MATLAB command window, once:
+#   matlab.engine.shareEngine("netrasetu")
+
+.\.venv\Scripts\Activate.ps1
+Start-Process powershell -ArgumentList '-NoExit','-Command',
+  '.\.venv\Scripts\uvicorn.exe service.main:app --host 0.0.0.0 --port 8000'
+Start-Process powershell -ArgumentList '-NoExit','-Command',
+  'cd web; npm run dev -- --host'</code></pre>
+<p>Turn on Windows Mobile hotspot and join it from the demo phone. The laptop is normally
+reachable at <code>192.168.137.1</code> on that network. Allow Python and Node through Windows
+Firewall for private networks when prompted — a blocked firewall prompt is the most common
+reason a phone cannot reach a laptop.</p>
+
+<div class="note kill">
+<p><strong>The phone will not get camera access or offline mode over plain HTTP.</strong>
+Browsers only enable the camera API and service workers in a secure context, and
+<code>http://192.168.137.1:5173</code> is not one. Without a fix, the live quality ring and the
+offline queue both silently fail on stage. On the one Android phone you will demo with, open
+<code>chrome://flags</code>, enable "Insecure origins treated as secure," add
+<code>http://192.168.137.1:5173</code>, and relaunch Chrome. This is a development setting on a
+device you control — never a deployment answer. Tier 1 does not need it, because Vercel serves
+real HTTPS.</p>
+</div>
+
+<h3>Tier 1 — showcase deployment</h3>
+<pre><code># Supabase — in the dashboard at https://supabase.com/dashboard
+#   New project → Region: choose "South Asia (Mumbai)" explicitly.
+#   Do NOT pick a general "APAC" region — it may place the project in Singapore,
+#   and a project's region cannot be changed after creation.
+#   Then: Storage → create bucket "netrasetu" (private) → S3 access keys → generate
+python scripts\migrate.py          # needs ADMIN_DATABASE_URL, GATEWAY_DB_PASSWORD, WORKER_DB_PASSWORD
+
+# Railway — from the repository root (no database here any more)
+railway login
+railway init                                  # project: netrasetu-showcase
+railway up                                    # builds service/Dockerfile.gateway
+railway variables --set "GATEWAY_MODE=queue" `
+                  --set "CORS_ORIGINS=https://netrasetu.vercel.app" `
+                  --set "DATABASE_URL=&lt;Supabase session-pooler URL, gateway role&gt;" `
+                  --set "S3_ENDPOINT=&lt;Supabase Storage S3 endpoint&gt;"
+railway domain                                # prints the public gateway URL
+# add Keycloak and Grafana from the Railway dashboard templates
+
+# Vercel — from web\
+vercel login
+vercel link
+vercel env add VITE_API_BASE production       # paste the Railway gateway URL
+vercel                                        # preview URL for teammates
+vercel --prod                                 # production URL for the submission
+
+# Laptop worker — reads .env.tier1
+python -m service.worker</code></pre>
+<pre><code># service/Dockerfile.gateway — no MATLAB, deliberately
+FROM python:3.12-slim
+WORKDIR /app
+COPY service/requirements-gateway.txt .
+RUN pip install --no-cache-dir -r requirements-gateway.txt
+COPY service/ ./service/
+ENV GATEWAY_MODE=queue
+CMD ["sh", "-c", "uvicorn service.main:app --host 0.0.0.0 --port ${PORT:-8000}"]</code></pre>
+<p>Three traps. <code>VITE_</code> variables are baked in at build time, so changing
+<code>VITE_API_BASE</code> needs a redeploy, not a restart. Add the Vercel domain to the
+Keycloak client's redirect URIs or login will fail with a redirect mismatch. And the
+<code>requirements-gateway.txt</code> must exclude <code>matlabengine</code>, which cannot install
+without MATLAB present.</p>
+
+<h3>Supabase — five settings that decide whether it is safe</h3>
+
+<h4>1 · Connect through the session pooler</h4>
+<p>Supabase's direct connection string is IPv6-only; for IPv4 you use Supavisor session mode or a
+paid IPv4 add-on. Many Indian home and college networks lack working IPv6, and so may Railway's
+outbound network, so use the <strong>session pooler (port 5432 on the pooler host)</strong> for
+both the gateway and the laptop worker. Avoid transaction mode (port 6543): it does not support
+prepared statements, and psycopg starts preparing repeated queries automatically — the worker's
+polling query would begin failing after a few iterations, which is a confusing bug to meet on
+demo day.</p>
+<pre><code># .env.tier1 — never committed
+DATABASE_URL=postgresql://worker.&lt;project-ref&gt;:&lt;password&gt;@&lt;pooler-host&gt;:5432/postgres
+S3_ENDPOINT=https://&lt;project-ref&gt;.supabase.co/storage/v1/s3
+S3_REGION=ap-south-1
+S3_BUCKET=netrasetu
+S3_ACCESS_KEY=                    # Storage → S3 access keys
+S3_SECRET_KEY=
+GATEWAY_MODE=queue
+MATLAB_SHARED_ENGINE=netrasetu
+WORKER_ID=laptop-gurjas</code></pre>
+<p>Copy the pooler host and the exact username format from the project's <strong>Connect</strong>
+panel rather than typing them; they encode the project reference and region.</p>
+
+<h4>2 · Keep clinical tables out of the browser API</h4>
+<p>Supabase automatically exposes tables in the <code>public</code> schema through a REST API that
+anyone holding the project's public key can call, guarded only by row-level security. This system
+never uses that API — the browser talks only to your gateway. So create every table in a
+<code>clinical</code> schema that is not in the exposed-schemas list, and the API has nothing to
+serve.</p>
+
+<h4>3 · Make row-level security actually bind</h4>
+<p>This corrects a gap in Section 10 that applies to local Postgres too. Row-level security does
+not constrain a table's owner, and the default <code>postgres</code> connection is an
+administrative role. A gateway connecting as <code>postgres</code> would silently bypass every
+facility policy — so the claim "a screener at Ambegaon cannot read Khed's rows even if the
+application is compromised" would be false. Give each service its own role, and force the
+policy:</p>
+<pre><code>-- platform/migrations/040_roles.sql — runs on Tier 0 and Tier 1 alike
+CREATE SCHEMA IF NOT EXISTS clinical;
+
+CREATE ROLE gateway LOGIN NOBYPASSRLS;     -- passwords are set by migrate.py
+CREATE ROLE worker  LOGIN NOBYPASSRLS;     -- from environment variables, never here
+
+GRANT USAGE ON SCHEMA clinical TO gateway, worker;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA clinical TO gateway;
+GRANT SELECT, UPDATE ON clinical.job TO worker;              -- worker sees jobs and
+GRANT SELECT, INSERT, UPDATE ON clinical.inference_cache TO worker;  -- the cache, nothing else
+
+ALTER TABLE clinical.study ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clinical.study FORCE  ROW LEVEL SECURITY;        -- binds even the owner
+CREATE POLICY facility_isolation ON clinical.study
+  USING (facility_id = current_setting('app.facility_id')::uuid);</code></pre>
+<pre><code># scripts/migrate.py — the same migrations for every tier
+import os, pathlib, psycopg
+from psycopg import sql
+
+with psycopg.connect(os.environ["ADMIN_DATABASE_URL"], autocommit=True) as db:
+    for f in sorted(pathlib.Path("platform/migrations").glob("*.sql")):
+        db.execute(f.read_text())
+        print("applied", f.name)
+    for role in ("gateway", "worker"):
+        db.execute(sql.SQL("ALTER ROLE {} PASSWORD {}").format(
+            sql.Identifier(role),
+            sql.Literal(os.environ[f"{role.upper()}_DB_PASSWORD"])))</code></pre>
+<p>The admin connection string is used only by this script and is never given to a running
+service. The gateway runs <code>SET LOCAL app.facility_id = …</code> at the start of each transaction,
+taken from the verified token. The worker never touches patient rows at all: it reads a job,
+fetches pixels by object key, and writes a result. Separating the two roles is what makes the
+earlier security test meaningful rather than decorative.</p>
+
+<h4>4 · The free tier pauses after a week</h4>
+<p>Free projects pause after 7 days of inactivity. Data survives a pause; a judge clicking your
+link to a paused project sees an error. Two habits cover it: restore the project from the
+dashboard and load the site yourself before sharing the link, and add a scheduled job that
+touches the database daily. Confirm on the dashboard that the project stays active — inactivity
+rules are Supabase's to define and have changed before.</p>
+<pre><code># .github/workflows/keepalive.yml
+name: keepalive
+on: { schedule: [{ cron: "30 3 * * *" }], workflow_dispatch: {} }
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: psql "$DB" -c "select 1"
+        env: { DB: "${{ secrets.SUPABASE_KEEPALIVE_URL }}" }</code></pre>
+
+<h4>5 · Budget the storage</h4>
+<p>The free tier includes 500 MB of database and 1 GB of file storage. Metadata, the job queue
+and the inference cache fit easily. Images and their deep-zoom tiles do not fit indefinitely:
+curate about thirty showcase images, upload them with their tiles, and check the Storage usage
+page before adding more. That limit is a reason to keep Tier 1 a curated showcase, which is what
+it should be anyway.</p>
+
+<div class="note">
+<p><strong>And for Tier 2?</strong> Supabase on a paid plan in Mumbai is a legitimate candidate for
+the managed Postgres in production — it removes the pause and raises the limits to 8 GB of
+database and 100 GB of storage. Production still needs Object Lock for write-once raw images and a
+compliance review, so this spec keeps Tier 2's store generic and leaves that choice to procurement.
+Supabase is the right pick for the showcase; it is a possible pick for production.</p>
+</div>
+
+<h3>Tier 2 — production</h3>
+<p>Section 8 specifies it: MATLAB Production Server on Kubernetes, in an in-country region, with
+the gateway in front and managed Postgres and S3 Object Lock behind. You describe this tier; you
+do not build it. Its credibility comes from the fact that Tiers 0 and 1 already run the same CTF
+contract, the same metric names and the same realm configuration.</p>
+
+<h3>Go-live checklist — the night before</h3>
+<table>
+<thead><tr><th style="width:56%">Check</th><th>How</th></tr></thead>
+<tbody>
+<tr><td>Model checkpoint frozen and tagged</td><td><code>git tag demo-v1</code>; no training after this</td></tr>
+<tr><td>Threshold hash matches validation output</td><td><code>python eval/check_threshold_hash.py</code></td></tr>
+<tr><td>Six golden demo images pass</td><td><code>runtests("tests/golden")</code></td></tr>
+<tr><td>Cache pre-warmed with the six demo images; fallback rehearsed</td><td>Run each image once, then <code>NX_CACHED_MODE=true</code> and run the full script</td></tr>
+<tr><td>Supabase project active, in Mumbai, under storage limits</td><td>Dashboard shows region <code>ap-south-1</code>; open the Vercel link from a phone on mobile data</td></tr>
+<tr><td>Image tags pinned</td><td>No <code>latest</code> left in <code>.env</code></td></tr>
+<tr><td>Phone flag set, hotspot tested in the venue</td><td>Capture one image on site, not at home</td></tr>
+<tr><td>Grafana seeded with 30 days across four facilities</td><td>Panel 1 shows both lines</td></tr>
+<tr><td>No secrets committed</td><td><code>git log -p | findstr /i "password secret token"</code> returns nothing</td></tr>
+<tr><td>Projector colour check</td><td>Refer, routine and retake states distinguishable at the back of the room</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- ══════════════ 26 ══════════════ -->
+<section id="s26">
+<h2><span class="n">Section 26</span>Caching strategy</h2>
+<p class="lede">Cache computation, never authority. Every key is content-addressed, so nothing can
+go stale and there is no invalidation logic to get wrong.</p>
+
+<h3>Where caching pays, and where it does not</h3>
+<p>Caching passes the scope test from Section 1 because it feeds three graded concerns: training
+speed on a single laptop, the sub-30-second review target, and the correctness of offline sync.
+But the value is unevenly distributed, and the spec should say so plainly.</p>
+<table>
+<thead><tr><th style="width:30%">Cache</th><th style="width:18%">Value</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Training preprocessing</td><td><span class="pill keep">highest</span></td><td>Without it,
+FOV crop, Ben Graham normalisation and CLAHE re-run on every image in every epoch of every
+experiment. On one laptop that is hours lost per day of iteration.</td></tr>
+<tr><td>Reviewer prefetch</td><td><span class="pill keep">high</span></td><td>The next case is
+already loaded when the grader presses <code>J</code>. Network wait is the one part of the
+21-second median the grader cannot shorten by being faster.</td></tr>
+<tr><td>Idempotent retries</td><td><span class="pill keep">required</span></td><td>A correctness
+fix, not a speed-up. A phone whose upload drops and retries must not create two studies for one
+eye.</td></tr>
+<tr><td>Inference results</td><td><span class="pill scope">modest</span></td><td>Most eyes are
+graded exactly once, so production hit rates will be low. Real value is in retries, report
+regeneration, and demo reliability. Do not claim it improves production throughput — it
+barely does.</td></tr>
+<tr><td>A dedicated cache server (Redis)</td><td><span class="pill cut">cut</span></td>
+<td>At about 400 screenings a day, a Postgres primary-key lookup is fast enough. On 16 GB of RAM,
+another service costs memory and adds a failure point for no measurable gain.</td></tr>
+</tbody>
+</table>
+
+<h3>Three rules</h3>
+<p><strong>Content-addressed keys.</strong> An inference result is keyed by the SHA-256 of the
+image bytes, the model version and the configuration hash. Retrain the model and the version
+changes, so every old entry simply stops matching. Nothing is ever invalidated because nothing
+can ever be stale.</p>
+<p><strong>Cache computation, not decisions.</strong> A grade is a pure function of pixels and
+model, so it is safe to reuse. A study record, a consent, and a reviewer's decision are facts
+about a specific patient at a specific time, and are always read from the database of record.
+A cache hit still creates a new study bound to the current patient, with its own audit entry.</p>
+<p><strong>Clinical data never enters a shared cache.</strong> Every clinical API response carries
+<code>Cache-Control: no-store</code>. Image tiles are cached only in the reviewer's own browser,
+only for the working session, and are cleared at logout.</p>
+
+<figure>
+<span class="scrollhint">↔ scroll to see the full diagram</span>
+<div class="figbox">
+<svg viewBox="0 0 920 550" role="img" aria-label="Request path through the caching layers, with a panel listing all cache layers">
+<style>
+  .ch-p{fill:#F7F8F8;stroke:#C6CFD5;stroke-width:1}
+  .ch-d{fill:#fff;stroke:#2C363E;stroke-width:1.2}
+  .ch-t{font-size:11.2px;fill:#12171C}
+  .ch-s{font-size:9.6px;fill:#5E6B75}
+  .ch-y{font-size:9.4px;fill:#5E6B75;font-family:'IBM Plex Mono',monospace}
+  .ch-a{stroke:#5E6B75;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+  .ch-g{stroke:#1B7F4C;stroke-width:1.4;fill:none;marker-end:url(#arG)}
+  .ch-w{stroke:#B26B00;stroke-width:1.4;fill:none;marker-end:url(#arR)}
+  .ch-L{fill:#fff;stroke:#C6CFD5;stroke-width:1}
+  .ch-h{font-size:11.2px;fill:#12171C;font-weight:600}
+</style>
+
+<!-- request path -->
+<text class="ch-h" x="14" y="26">Request path — POST /analyze</text>
+<rect x="120" y="40" width="160" height="32" rx="16" fill="#12171C"/>
+<text x="200" y="60" text-anchor="middle" fill="#fff" font-size="11">Upload arrives</text>
+<path class="ch-a" d="M200 72 L200 92"/>
+
+<path class="ch-d" d="M200 94 L290 126 L200 158 L110 126 Z"/>
+<text class="ch-t" x="200" y="123" text-anchor="middle">Idempotency</text>
+<text class="ch-t" x="200" y="137" text-anchor="middle">key seen?</text>
+<path class="ch-a" d="M290 126 L326 126"/><text class="ch-y" x="296" y="119">yes</text>
+<rect class="ch-p" x="330" y="108" width="190" height="36" rx="3"/>
+<text class="ch-t" x="342" y="124">Return the existing study</text>
+<text class="ch-s" x="342" y="138">retry after a dropped upload</text>
+
+<path class="ch-a" d="M200 158 L200 178"/><text class="ch-y" x="208" y="172">no</text>
+<rect class="ch-p" x="110" y="180" width="180" height="34" rx="3"/>
+<text class="ch-t" x="200" y="201" text-anchor="middle">SHA-256 of image bytes</text>
+<path class="ch-a" d="M200 214 L200 234"/>
+
+<path class="ch-d" d="M200 236 L290 268 L200 300 L110 268 Z"/>
+<text class="ch-t" x="200" y="265" text-anchor="middle">Same pixels,</text>
+<text class="ch-t" x="200" y="279" text-anchor="middle">other patient?</text>
+<path class="ch-w" d="M290 268 L326 268"/><text class="ch-y" x="296" y="261" style="fill:#B26B00">yes</text>
+<rect x="330" y="250" width="190" height="36" rx="3" fill="#FBF3E6" stroke="#B26B00"/>
+<text class="ch-t" x="342" y="266">Integrity flag → reviewer</text>
+<text class="ch-s" x="342" y="280">likely a mislabelled patient</text>
+
+<path class="ch-a" d="M200 300 L200 320"/><text class="ch-y" x="208" y="314">no</text>
+<path class="ch-d" d="M200 322 L290 354 L200 386 L110 354 Z"/>
+<text class="ch-t" x="200" y="351" text-anchor="middle">Cache hit?</text>
+<text class="ch-y" x="200" y="365" text-anchor="middle">sha · model · cfg</text>
+<path class="ch-g" d="M290 354 L326 354"/><text class="ch-y" x="296" y="347" style="fill:#1B7F4C">yes</text>
+<rect x="330" y="336" width="190" height="36" rx="3" fill="#EAF4EE" stroke="#1B7F4C"/>
+<text class="ch-t" x="342" y="352">Reuse cached payload</text>
+<text class="ch-s" x="342" y="366">no MATLAB call</text>
+
+<path class="ch-a" d="M200 386 L200 410"/><text class="ch-y" x="208" y="402">no</text>
+<rect x="110" y="412" width="180" height="40" rx="3" fill="#E6F1F2" stroke="#0E7C86" stroke-width="1.4"/>
+<text class="ch-t" x="200" y="429" text-anchor="middle" font-weight="600">Run MATLAB pipeline</text>
+<text class="ch-s" x="200" y="444" text-anchor="middle">then write cache entry</text>
+
+<path class="ch-a" d="M200 452 L200 478"/>
+<path class="ch-g" d="M425 372 L425 478"/>
+<rect class="ch-p" x="110" y="480" width="410" height="54" rx="3"/>
+<text class="ch-t" x="124" y="499" font-weight="600">New study bound to this patient, plus audit entry</text>
+<text class="ch-s" x="124" y="515">a cache hit is recorded as such — it never reuses another patient's study</text>
+<text class="ch-y" x="124" y="528">response: Cache-Control: no-store</text>
+
+<!-- layer panel -->
+<text class="ch-h" x="560" y="26">Cache layers</text>
+<rect class="ch-L" x="560" y="40" width="346" height="58" rx="3"/>
+<text class="ch-t" x="572" y="58" font-weight="600">Browser</text>
+<text class="ch-s" x="572" y="74">app shell precache · session tile cache · next-case prefetch</text>
+<text class="ch-s" x="572" y="88">capture queue (purged once synced)</text>
+
+<rect class="ch-L" x="560" y="106" width="346" height="58" rx="3"/>
+<text class="ch-t" x="572" y="124" font-weight="600">HTTP</text>
+<text class="ch-s" x="572" y="140">hashed assets immutable · tiles private, immutable</text>
+<text class="ch-s" x="572" y="154">clinical responses no-store</text>
+
+<rect class="ch-L" x="560" y="172" width="346" height="58" rx="3"/>
+<text class="ch-t" x="572" y="190" font-weight="600">Gateway</text>
+<text class="ch-s" x="572" y="206">idempotency keys · inference cache (Postgres)</text>
+<text class="ch-s" x="572" y="220">Keycloak signing keys · presigned-URL reuse</text>
+
+<rect class="ch-L" x="560" y="238" width="346" height="58" rx="3"/>
+<text class="ch-t" x="572" y="256" font-weight="600">MATLAB</text>
+<text class="ch-s" x="572" y="272">model and config loaded once (persistent)</text>
+<text class="ch-s" x="572" y="286">engine kept warm between calls</text>
+
+<rect class="ch-L" x="560" y="304" width="346" height="58" rx="3"/>
+<text class="ch-t" x="572" y="322" font-weight="600">Training (offline)</text>
+<text class="ch-s" x="572" y="338">enhanced-image cache, versioned folder</text>
+<text class="ch-s" x="572" y="352">lesion-feature cache for the fusion model</text>
+
+<rect x="560" y="378" width="346" height="72" rx="3" fill="#FBECEB" stroke="#B3261E"/>
+<text class="ch-t" x="572" y="397" font-weight="600" style="fill:#B3261E">Never cached</text>
+<text class="ch-s" x="572" y="414">clinical API responses · patient-link pages</text>
+<text class="ch-s" x="572" y="428">consent records · reviewer decisions · study records</text>
+<text class="ch-s" x="572" y="442">always read from the database of record</text>
+</svg>
+</div>
+<figcaption><b>Figure 9 — Request path through the caches.</b> The order of the diamonds matters.
+Idempotency is checked first because a retry must return the <em>same</em> study, not merely the
+same grade. The cross-patient check comes before the cache lookup so that a mislabelled image is
+caught even when a cached answer is available.</figcaption>
+</figure>
+
+<h3>What is cached, where, for how long</h3>
+<table>
+<thead><tr><th style="width:22%">Layer</th><th style="width:26%">Key</th><th style="width:22%">Lifetime</th><th>Invalidated by</th></tr></thead>
+<tbody>
+<tr><td>Inference results</td><td>SHA-256 · model version · config hash</td><td>Until the model
+is retired</td><td>Nothing — a new model version simply stops matching</td></tr>
+<tr><td>Idempotency keys</td><td>Client-generated UUID per capture</td><td>7 days</td>
+<td>Expiry</td></tr>
+<tr><td>MATLAB model and config</td><td>Process lifetime</td><td>Until engine restart</td>
+<td>Restart after deploying a new model</td></tr>
+<tr><td>Training images</td><td>Folder name carries the preprocessing version</td>
+<td>Until preprocessing changes</td><td>Bump the version; a new folder is built</td></tr>
+<tr><td>Lesion features</td><td>Image ID · detector version</td><td>Until a detector changes</td>
+<td>Bump the detector version</td></tr>
+<tr><td>Image tiles (browser)</td><td>Content-addressed URL</td><td>One working session, capped</td>
+<td>Logout clears the cache</td></tr>
+<tr><td>App shell (browser)</td><td>Build hash in each filename</td><td>Until the next deploy</td>
+<td>New build, new filenames</td></tr>
+<tr><td>Keycloak signing keys</td><td>Key ID</td><td>1 hour</td><td>Unknown key ID forces a refetch</td></tr>
+</tbody>
+</table>
+
+<h3>Gateway — the inference cache</h3>
+<p>One table in the Postgres you already run. No new service.</p>
+<pre><code>CREATE TABLE inference_cache (
+  img_sha256   bytea       NOT NULL,
+  model_ver    text        NOT NULL,
+  cfg_hash     text        NOT NULL,
+  payload      jsonb       NOT NULL,      -- grade, posterior, evidence keys, criteria
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  hit_count    integer     NOT NULL DEFAULT 0,
+  PRIMARY KEY (img_sha256, model_ver, cfg_hash)
+);
+
+ALTER TABLE study ADD COLUMN client_key uuid UNIQUE;   -- idempotency</code></pre>
+
+<pre><code># service/cache.py — wraps the MATLAB call from Section 23
+import hashlib, json
+from prometheus_client import Counter
+
+CACHE = Counter("netrasetu_cache_requests_total", "Cache lookups", ["layer", "result"])
+
+def analyze_cached(db, raw: bytes, patient_id, client_key, run_matlab, version):
+    # 1 · idempotency: a retry returns the same study, not a new one
+    if client_key:
+        row = db.execute("SELECT id FROM study WHERE client_key = %s", (client_key,)).fetchone()
+        if row:
+            CACHE.labels("idempotency", "hit").inc()
+            return load_study(db, row[0])
+
+    sha = hashlib.sha256(raw).digest()
+
+    # 2 · same pixels already belong to a different patient → never auto-serve
+    other = db.execute(
+        "SELECT 1 FROM study WHERE sha256 = %s AND patient_id &lt;&gt; %s LIMIT 1",
+        (sha, patient_id)).fetchone()
+    if other:
+        return create_study(db, patient_id, client_key, sha, payload=None,
+                            flag="same_image_other_patient")
+
+    # 3 · computation cache, keyed by content + model + config
+    key = (sha, version["modelVer"], version["cfgHash"])
+    row = db.execute("""UPDATE inference_cache SET hit_count = hit_count + 1
+                        WHERE img_sha256 = %s AND model_ver = %s AND cfg_hash = %s
+                        RETURNING payload""", key).fetchone()
+    if row:
+        CACHE.labels("inference", "hit").inc()
+        payload, source = row[0], "cache"
+    else:
+        CACHE.labels("inference", "miss").inc()
+        payload, source = run_matlab(raw), "matlab"
+        db.execute("""INSERT INTO inference_cache (img_sha256, model_ver, cfg_hash, payload)
+                      VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING""",
+                   (*key, json.dumps(payload)))
+
+    # 4 · always a fresh study for this patient, with the source in the audit trail
+    return create_study(db, patient_id, client_key, sha, payload, source=source)</code></pre>
+<p>Get the version from MATLAB itself at engine startup, so the cache key cannot drift from the
+model actually loaded:</p>
+<pre><code>function txt = nx_version()
+%NX_VERSION  Identity of the loaded model and configuration, for cache keys.
+    cfg = nx_config();
+    s.modelVer = string(cfg.modelVer);
+    s.cfgHash  = string(cfg.thresholdHash);
+    txt = jsonencode(s);
+end</code></pre>
+<p><code>modelVer</code> is already defined in <code>nx_config</code> (Section 22). Bump it
+whenever the weights change.</p>
+
+<h3>MATLAB — load the model once</h3>
+<pre><code>function net = nx_model()
+%NX_MODEL  Trained network, loaded on first call and kept for the engine's lifetime.
+    persistent m
+    if isempty(m)
+        cfg = nx_config();
+        s = load(cfg.modelFile, "net");
+        m = s.net;
+    end
+    net = m;
+end</code></pre>
+<p>This is what <code>nx_warmup</code> from Section 23 actually pays for: the first call loads
+the weights, every later call reuses them. Restart the engine after deploying a new model, or the
+old one stays in memory.</p>
+
+<h3>Training — preprocess once, train many times</h3>
+<pre><code>function nx_build_cache(srcDir, cacheDir)
+%NX_BUILD_CACHE  Enhance every image once. Resumable: finished files are skipped.
+%   Put the preprocessing version in cacheDir, e.g. data/cache/enh_v1_512.
+    imds = imageDatastore(srcDir, IncludeSubfolders=true);
+    if ~isfolder(cacheDir), mkdir(cacheDir); end
+    files = imds.Files;
+    parfor i = 1:numel(files)
+        [~, name] = fileparts(files{i});
+        out = fullfile(cacheDir, name + ".png");
+        if isfile(out), continue; end
+        I = nx_enhance(files{i});
+        imwrite(imresize(I, [512 512]), out);
+    end
+end</code></pre>
+<pre><code>parpool("Processes", 4);     % 4, not 8 — each worker costs RAM on a 16 GB machine
+nx_build_cache("data/aptos/train_images", "data/cache/enh_v1_512");
+dsTrain = imageDatastore("data/cache/enh_v1_512");   % every epoch reads from here</code></pre>
+<p>Three details make this safe. PNG, not JPEG, so caching adds no compression artefacts to
+images whose microaneurysms are a few pixels wide. The version in the folder name means changing
+<code>nx_enhance</code> produces a new folder rather than silently mixing old and new
+preprocessing in one training run. And the <code>isfile</code> check makes an interrupted build
+resume where it stopped.</p>
+<p>Apply the same pattern to Stream B: save the ~24 lesion features per image to
+<code>data/cache/features_v1.mat</code>, so retraining the fusion model takes seconds instead of
+re-running every detector.</p>
+
+<h3>Browser — service worker and prefetch</h3>
+<pre><code>// web/vite.config.ts — inside VitePWA({ ... })
+workbox: {
+  globPatterns: ['**/*.{js,css,html,woff2,svg}'],          // app shell, precached
+  runtimeCaching: [
+    { urlPattern: ({ url }) =&gt; url.pathname.startsWith('/locales/'),
+      handler: 'StaleWhileRevalidate',
+      options: { cacheName: 'i18n' } },
+    { urlPattern: ({ url }) =&gt; url.pathname.includes('/dzi/'),
+      handler: 'CacheFirst',
+      options: { cacheName: 'tiles',
+                 expiration: { maxEntries: 2000, maxAgeSeconds: 8 * 3600 } } },
+  ],
+  // deliberately no rule for /analyze, /study or /review — those are never cached
+}</code></pre>
+<pre><code>// Reviewer Console — prefetch the next two cases while the current one is open
+useEffect(() =&gt; {
+  queue.slice(index + 1, index + 3).forEach(c =&gt; {
+    fetch(c.dzi.level0Url);                       // lands in the 'tiles' cache
+    c.evidence.forEach(e =&gt; fetch(e.cropUrl));
+  });
+}, [index]);
+
+// On logout
+await caches.delete('tiles');</code></pre>
+<p>One trap breaks this silently. Presigned URLs carry a signature in the query string, and the
+browser caches by full URL. If the gateway issues a fresh signature on every request, every tile
+looks new and nothing is ever reused. Have the gateway reuse each study's presigned URLs for the
+length of their validity, so the cache key stays stable across a session.</p>
+
+<h3>HTTP policy</h3>
+<table>
+<thead><tr><th style="width:34%">Resource</th><th style="width:36%">Cache-Control</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Built assets (<code>/assets/*</code>)</td><td><code>public, max-age=31536000, immutable</code></td>
+<td>Vite puts a content hash in every filename</td></tr>
+<tr><td><code>index.html</code>, <code>sw.js</code></td><td><code>no-cache</code></td><td>Must pick up new
+asset names and fixes immediately</td></tr>
+<tr><td>Image tiles</td><td><code>private, max-age=31536000, immutable</code></td><td>Pixels never
+change, but <code>private</code> keeps patient images out of any shared cache or CDN</td></tr>
+<tr><td><code>/analyze</code>, <code>/study/*</code>, <code>/review/*</code></td><td><code>no-store</code></td>
+<td>Clinical data</td></tr>
+<tr><td>Patient link <code>/r/{token}</code></td><td><code>no-store</code></td><td>Single-use
+token; a cached copy would outlive it</td></tr>
+</tbody>
+</table>
+
+<h3>The demo fallback becomes the cache</h3>
+<p>The cached-results mode from Section 15 no longer needs separate machinery. Before the demo,
+run the six demo images through the pipeline once; their results are now in
+<code>inference_cache</code>. If MATLAB fails on stage, the gateway serves those six from the
+cache and answers anything else with a clear <em>"grading node unavailable — queued"</em>. The UI
+is identical either way, because it is the same code path. <code>NX_CACHED_MODE=true</code> now
+means one thing: serve from the cache, never call MATLAB.</p>
+
+<h3>Observability and the capacity model</h3>
+<p>Add a hit-ratio panel to the Admin Console from
+<code>netrasetu_cache_requests_total</code>. In SimEvents, a cache hit bypasses the inference
+server entirely, so add it as a routing branch before that server — and parameterise it with your
+<em>measured</em> hit ratio, which in production will be small. Modelling an optimistic hit rate
+would flatter your throughput numbers in exactly the way Section 11 warns against.</p>
+</section>
+
+<footer>
+<p>All colour tokens, type decisions, diagrams and screen specifications in this document are
+original to this brief. External tools, datasets and standards are linked to primary sources in
+Section 13. Performance figures quoted for the closing pitch are targets, not measured results —
+replace them with your own bootstrap intervals before presenting.</p>
+<p>NetraSetu — engineering specification v3.2 · SIH PS 26038 · MathWorks</p>
+</footer>
+
+</main>
+</div>
+</div>
+</body>
+</html>
