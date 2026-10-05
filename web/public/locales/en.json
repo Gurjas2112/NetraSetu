@@ -2,5 +2,122 @@
   "app": {
     "title": "NetraSetu",
     "tagline": "Diabetic eye screening"
+  },
+  "nav": {
+    "field": "Screen",
+    "review": "Review",
+    "patient": "Patient",
+    "admin": "Admin",
+    "language": "Language"
+  },
+  "language": {
+    "en": "English",
+    "hi": "हिन्दी",
+    "mr": "मराठी"
+  },
+  "field": {
+    "title": "Screen a patient",
+    "patientRef": "Patient reference",
+    "consentId": "Consent reference",
+    "image": "Fundus image",
+    "submit": "Check image",
+    "assessing": "Checking image…",
+    "why_one": "Why? ({{count}} finding)",
+    "why_other": "Why? ({{count}} findings)",
+    "error": {
+      "generic": "Something went wrong. Please try again.",
+      "unavailable": "The grading service is not available right now. The image has not been graded."
+    }
+  },
+  "decision": {
+    "refer": {
+      "title": "REFER",
+      "next": "See an eye doctor within 4 weeks."
+    },
+    "routine": {
+      "title": "ROUTINE",
+      "next": "No referral needed today. Come back for your next scheduled screening."
+    },
+    "retake": {
+      "title": "RETAKE",
+      "next": "Follow the instruction below and take the image again."
+    }
+  },
+  "retake": {
+    "defocus": {
+      "hold_steady": "The image is blurred. Hold the camera steady and refocus before capturing."
+    },
+    "underexposed": {
+      "nasal": "The nose side of this image is too dark. Move the light slightly to the right."
+    },
+    "partial_fov": {
+      "centre": "Part of the retina is cut off. Centre the eye in the circle and capture again."
+    },
+    "overexposed": {
+      "reduce_light": "The image is too bright. Reduce the light and capture again."
+    },
+    "media_opacity": {
+      "dilate": "The view is hazy. Dilate the pupil if permitted and capture again."
+    },
+    "escalate": "Cannot screen here — refer for a dilated exam."
+  },
+  "icdr": {
+    "l2": {
+      "haemorrhages_multi_quadrant": "Haemorrhages in more than one quadrant (ICDR level 2)"
+    },
+    "l3": {
+      "haemorrhages_four_quadrants": "Haemorrhages in all four quadrants (ICDR level 3)"
+    },
+    "l4": {
+      "nv_proxy": "Possible new vessel growth — vessel-shape proxy, not a confirmed detection (ICDR level 4)"
+    }
+  },
+  "grade": {
+    "0": "0 · No DR",
+    "1": "1 · Mild NPDR",
+    "2": "2 · Moderate NPDR",
+    "3": "3 · Severe NPDR",
+    "4": "4 · Proliferative DR"
+  },
+  "review": {
+    "title": "Review",
+    "empty": "No case yet. Screen an image first.",
+    "decision": "Decision",
+    "grade": "AI grade",
+    "pReferable": "Probability referable",
+    "reviewRequired": "Review required",
+    "criteria": "Criteria",
+    "modelVer": "Model",
+    "none": "—",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "patient": {
+    "title": "Your eye check",
+    "empty": "No result yet.",
+    "found": {
+      "heading": "What we found",
+      "refer": "We found signs of damage in the small blood vessels of your eye.",
+      "routine": "We did not find signs of diabetic eye damage today.",
+      "retake": "The photo of your eye was not clear enough. It needs to be taken again."
+    },
+    "next": {
+      "heading": "What happens next",
+      "refer": "See an eye doctor within 4 weeks. Treatment keeps your sight.",
+      "routine": "Keep your diabetes under control and come back for your next screening.",
+      "retake": "The health worker will take another photo now."
+    },
+    "where": {
+      "heading": "Where to go",
+      "pending": "Your health worker will give you the place and time."
+    }
+  },
+  "admin": {
+    "title": "Programme health",
+    "loading": "Checking services…",
+    "unreachable": "The gateway cannot be reached.",
+    "status": "Status",
+    "engine": "Engine",
+    "contract": "Contract version"
   }
 }

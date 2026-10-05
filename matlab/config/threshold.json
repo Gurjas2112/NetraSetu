@@ -1,0 +1,7 @@
+{
+  "_comment": "PLACEHOLDER. This file is written only by eval/run_validation.m. Never hand-edit it.",
+  "placeholder": true,
+  "threshold": null,
+  "selectedOn": null,
+  "rule": "sensitivity >= 0.90 on the validation split"
+}

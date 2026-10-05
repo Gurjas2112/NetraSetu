@@ -24,6 +24,7 @@ __pycache__/
 node_modules/
 web/dist/
 web/dev-dist/
+*.tsbuildinfo
 playwright-report/
 test-results/
 blob-report/

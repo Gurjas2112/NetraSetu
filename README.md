@@ -39,14 +39,34 @@ Tests:
 ```powershell
 python -m pytest -q
 npm --prefix web run build
+
+# end-to-end: Playwright starts the fake-engine gateway and Vite itself
+npx --prefix web playwright install chromium
+$env:PYTHON = "$PWD\.venv\Scripts\python.exe"
 npm --prefix web run test:e2e
+```
+
+After changing `service/schemas.py`, regenerate the client types (never hand-edit them):
+
+```powershell
+python scripts/export_openapi.py
+npm --prefix web run gen:api
 ```
 
 ## Using the real MATLAB engine
 
-In MATLAB R2026b, add `matlab/` and `matlab/nx/` to the path and run
-`matlab.engine.shareEngine("netrasetu")`. Install `matlabengine` from `requirements.txt` and start
-the gateway with `GATEWAY_ENGINE=matlab` and `MATLAB_SHARED_ENGINE=netrasetu`.
+Check the stub contract from the repository root:
+
+```powershell
+matlab -batch "addpath('matlab','matlab/nx'); r = runtests('matlab/tests/unit'); exit(any([r.Failed]))"
+New-Item -ItemType Directory -Force results | Out-Null
+matlab -batch "addpath('matlab','matlab/nx'); writelines(netrasetu_analyze_json('tests/fixtures/grade2_haem.png', tempdir), 'results/stub.json')"
+python -m service.validate_json results/stub.json
+```
+
+To serve it, run `matlab.engine.shareEngine("netrasetu")` in an open MATLAB R2026b session,
+install `matlabengine` from `requirements.txt`, and start the gateway with
+`GATEWAY_ENGINE=matlab` and `MATLAB_SHARED_ENGINE=netrasetu`.
 
 ## Documentation
 
