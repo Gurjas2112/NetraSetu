@@ -1,0 +1,2 @@
+# Platform services (Postgres, Keycloak, Garage, Prometheus, Grafana) are added in milestone M2.
+services: {}

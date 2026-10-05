@@ -1,0 +1,4 @@
+# Gateway + worker + MATLAB Engine for Python (Tier 0 machine with MATLAB installed).
+-r service/requirements-gateway.txt
+# 26.2.x is the R2026b line. TODO(verify): confirm this installs against the local R2026b update.
+matlabengine==26.2.4

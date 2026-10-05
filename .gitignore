@@ -1,0 +1,40 @@
+# secrets
+.env
+.env.tier1
+garage.toml
+!platform/garage/garage.toml.example
+
+# data, models, results (licensed datasets must never be committed)
+data/*
+!data/splits.json
+results/
+models/
+matlab/models/*
+!matlab/models/.gitkeep
+checkpoints/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# node / web
+node_modules/
+web/dist/
+web/dev-dist/
+playwright-report/
+test-results/
+blob-report/
+
+# matlab
+*.asv
+slprj/
+*.slxc
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,5 @@
+# Gateway runtime dependencies. Excludes matlabengine so the gateway container builds without MATLAB.
+fastapi==0.142.2
+pydantic==2.13.5
+uvicorn==0.54.0
+python-multipart==0.0.32

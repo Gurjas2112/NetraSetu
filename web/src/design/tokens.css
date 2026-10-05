@@ -1,0 +1,35 @@
+/* Design tokens from the spec, Section 14. Components use these variables only — never literal hex. */
+:root {
+  /* chrome — cool neutrals only */
+  --nx-void: #0b0f14;
+  --nx-slate-900: #141a21;
+  --nx-slate-700: #263038;
+  --nx-slate-400: #7c8b98;
+  --nx-slate-200: #c4ced6;
+  --nx-paper: #f4f6f7;
+  --nx-signal: #0e7c86;
+
+  /* lesion semantics */
+  --lx-exudate: #e8c33a;
+  --lx-cottonwool: #b9d6c6;
+  --lx-haem: #8e1f2b;
+  --lx-microan: #c2185b;
+  --lx-vessel: #5a1a14;
+  --lx-neovasc: #7b2ff7;
+
+  /* decision states — three, and only three */
+  --dx-refer: #b3261e;
+  --dx-routine: #1b7f4c;
+  --dx-retake: #b26b00;
+
+  /* type scale */
+  --t-decision: 600 clamp(2rem, 6vw, 2.75rem) / 1.05 var(--font-sans);
+  --t-h1: 600 1.5rem / 1.2 var(--font-sans);
+  --t-body: 400 1.0625rem / 1.55 var(--font-sans);
+  --t-data: 500 0.9375rem / 1.4 var(--font-mono);
+  --t-caption: 400 0.8125rem / 1.35 var(--font-sans);
+
+  /* TODO(M5): self-host IBM Plex via Fontsource; system fallbacks until then */
+  --font-sans: "IBM Plex Sans", "IBM Plex Sans Devanagari", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}

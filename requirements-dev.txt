@@ -1,0 +1,6 @@
+# Test and tooling dependencies. Locust is added in M7.
+pytest==9.1.1
+httpx==0.28.1
+pillow==12.3.0
+numpy==2.5.3
+ruff==0.16.10
