@@ -105,6 +105,11 @@ The engine result with these changes:
    study, with `source = cache` in the response and in the audit trail.
 5. **Engine** on a miss. With `NX_CACHED_MODE=true` a miss is `503`
    `{"status":"queued","reason":"grading node unavailable"}` and nothing is stored.
+   With `GATEWAY_MODE=queue` a miss uploads the pixels under `inbox/`, inserts
+   `clinical.job`, and returns the same `503`. A Pattern B worker (`python -m service.worker`)
+   claims the job with `FOR UPDATE SKIP LOCKED`, writes `inference_cache` only (the worker
+   role has no grant on study/result), and the client's retry materialises the study with
+   `source = cache`.
 
 ## 6.3 HTTP endpoints
 

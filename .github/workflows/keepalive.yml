@@ -1,0 +1,19 @@
+name: keepalive
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch: {}
+
+# Daily SELECT 1 so a paused Supabase free project does not surprise a judge.
+# SUPABASE_KEEPALIVE_URL is a GitHub secret: the session pooler URI (port 5432), never 6543.
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: psql "$DB" -c "select 1"
+        env:
+          DB: ${{ secrets.SUPABASE_KEEPALIVE_URL }}
