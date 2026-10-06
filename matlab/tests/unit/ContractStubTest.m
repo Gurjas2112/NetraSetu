@@ -1,5 +1,5 @@
 classdef ContractStubTest < matlab.unittest.TestCase
-    %CONTRACTSTUBTEST  The engine boundary returns JSON text that decodes into contract 1.0.
+    %CONTRACTSTUBTEST  The engine boundary returns JSON text that decodes into contract 1.1.
 
     properties
         RepoRoot string
@@ -24,7 +24,7 @@ classdef ContractStubTest < matlab.unittest.TestCase
 
         function decodesToContract(testCase)
             s = jsondecode(netrasetu_analyze_json(testCase.fixture("grade2_haem.png"), tempname));
-            testCase.verifyEqual(s.contractVersion, '1.0');
+            testCase.verifyEqual(s.contractVersion, '1.1');
             testCase.verifyTrue(ismember(s.decision, {'REFER', 'ROUTINE', 'RETAKE'}));
             testCase.verifyNumElements(s.posterior, 5);
             testCase.verifyEqual(sum(s.posterior), 1, "AbsTol", 1e-6);

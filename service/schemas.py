@@ -10,11 +10,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Literal, Self
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-CONTRACT_VERSION = "1.0"
+CONTRACT_VERSION = "1.1"
 POSTERIOR_TOLERANCE = 1e-6
+ContractVersion = Literal["1.1"]
 
 Decision = Literal["REFER", "ROUTINE", "RETAKE"]
 Verdict = Literal["accept", "enhance", "reject"]
@@ -26,6 +28,8 @@ LesionType = Literal["MA", "HE", "EX", "SE", "NV_PROXY"]
 Quadrant = Literal["ST", "SN", "IT", "IN"]
 Source = Literal["matlab", "cache"]
 Flag = Literal["same_image_other_patient", "repeat_screening"]
+ReasonChip = Literal["image_artefact", "lesion_miscount", "disc_region_confusion", "dme_missed"]
+Language = Literal["en", "hi", "mr"]
 
 
 class _Strict(BaseModel):
@@ -63,7 +67,7 @@ class StudyEvidence(_EvidenceBase):
 
 
 class _ResultBase(_Strict):
-    contractVersion: Literal["1.0"]
+    contractVersion: ContractVersion
     modelVer: str = Field(min_length=1)
     cfgHash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     decision: Decision
@@ -154,8 +158,10 @@ class StudyResponse(_ResultBase):
                 )
             if not self.reviewRequired:
                 raise ValueError("same_image_other_patient requires reviewRequired = true")
-            if self.decision != "REFER":
-                raise ValueError("same_image_other_patient is shown to the screener as REFER")
+            if self.decision == "ROUTINE":
+                raise ValueError("same_image_other_patient is never ROUTINE")
+            if self.decision == "RETAKE" and self.quality.verdict != "reject":
+                raise ValueError("same_image_other_patient is REFER unless the image was rejected")
         else:
             if self.evidence is None:
                 raise ValueError("evidence may only be null for same_image_other_patient")
@@ -168,8 +174,75 @@ class HealthStatus(_Strict):
     status: Literal["ok", "degraded"]
     engine: str
     engineReady: bool
-    contractVersion: Literal["1.0"] = CONTRACT_VERSION
+    databaseReady: bool
+    storageReady: bool
+    contractVersion: ContractVersion = CONTRACT_VERSION
 
 
 class ErrorBody(_Strict):
     detail: str
+
+
+class QueuedBody(_Strict):
+    """503 body when NX_CACHED_MODE is on and the image is not in the inference cache."""
+
+    status: Literal["queued"]
+    reason: str
+
+
+class ConsentRequest(_Strict):
+    patientRef: UUID | None = Field(
+        default=None, description="Existing patient; omit to register a new patient"
+    )
+    purpose: Literal["screening"]
+    noticeHash: str = Field(pattern=r"^[0-9a-f]{64}$", description="sha256 of the notice shown")
+    language: Language
+    phone: str | None = Field(default=None, pattern=r"^\+?[0-9 -]{6,20}$")
+
+
+class ConsentResponse(_Strict):
+    consentId: UUID
+    patientRef: UUID
+
+
+class ReviewQueueItem(_Strict):
+    studyId: UUID
+    createdAt: datetime
+    decision: Decision
+    grade: int | None
+    pReferable: float | None
+    flag: Flag | None
+
+
+class ReviewRequest(_Strict):
+    decision: Decision
+    grade: int | None = Field(ge=0, le=4)
+    reasonChip: ReasonChip | None = None
+    elapsedMs: int | None = Field(default=None, ge=0)
+
+
+class ReviewResponse(_Strict):
+    reviewId: UUID
+    studyId: UUID
+    decision: Decision
+    grade: int | None
+    overturn: bool
+
+
+class PatientLinkRequest(_Strict):
+    phone: str = Field(pattern=r"^\+?[0-9 -]{6,20}$")
+
+
+class PatientLinkResponse(_Strict):
+    token: str
+    expiresAt: datetime
+
+
+class PatientView(_Strict):
+    """What the patient link shows: the signed decision in lay terms, never a grade."""
+
+    decision: Decision
+    reviewed: bool
+    laterality: Laterality
+    screenedAt: datetime
+    retakeGuidanceKey: str | None

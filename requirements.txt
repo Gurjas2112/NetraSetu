@@ -2,5 +2,3 @@
 -r service/requirements-gateway.txt
 # 26.2.x is the R2026b line. TODO(verify): confirm this installs against the local R2026b update.
 matlabengine==26.2.4
-psycopg[binary]==3.3.6
-boto3==1.43.108

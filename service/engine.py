@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -28,7 +29,17 @@ class Engine(Protocol):
 
     def ready(self) -> bool: ...
 
+    def version(self) -> EngineVersion: ...
+
     def analyze_json(self, img_path: Path, out_dir: Path) -> str: ...
+
+
+@dataclass(frozen=True)
+class EngineVersion:
+    """The inference-cache key components, reported by the engine that will do the work."""
+
+    model_ver: str
+    cfg_hash: str
 
 
 def cfg_hash(threshold_path: Path) -> str:
@@ -76,19 +87,25 @@ _UNKNOWN_POSTERIOR = [0.15, 0.20, 0.35, 0.20, 0.10]
 class FakeEngine:
     name = "fake"
 
-    def __init__(self, threshold_path: Path) -> None:
+    def __init__(self, threshold_path: Path, model_ver: str = MODEL_VER) -> None:
         self._threshold_path = threshold_path
+        self._model_ver = model_ver
+        self.calls = 0
 
     def ready(self) -> bool:
         return self._threshold_path.is_file()
 
+    def version(self) -> EngineVersion:
+        return EngineVersion(self._model_ver, cfg_hash(self._threshold_path))
+
     def analyze_json(self, img_path: Path, out_dir: Path) -> str:
+        self.calls += 1
         out_dir.mkdir(parents=True, exist_ok=True)
         stem = img_path.stem.lower()
         digest = hashlib.sha256(img_path.read_bytes()).hexdigest()
         base: dict[str, Any] = {
             "contractVersion": CONTRACT_VERSION,
-            "modelVer": MODEL_VER,
+            "modelVer": self._model_ver,
             "cfgHash": cfg_hash(self._threshold_path),
         }
         quality = {"verdict": "accept", "score": 0.92, "failureMode": "none", "phash": digest[:16]}
@@ -156,6 +173,7 @@ class MatlabEngine:
         self._nx_root = nx_root
         self._lock = threading.Lock()
         self._eng: Any = None
+        self._version: EngineVersion | None = None
 
     def _connect(self) -> Any:
         if self._eng is not None:
@@ -168,13 +186,28 @@ class MatlabEngine:
             eng = matlab.engine.connect_matlab(self._shared_name)
             eng.addpath(str(self._nx_root), nargout=0)
             eng.addpath(str(self._nx_root / "nx"), nargout=0)
-            eng.eval("jsonencode(nx_version());", nargout=0)
+            info = json.loads(str(eng.eval("jsonencode(nx_version())", nargout=1)))
         except Exception as exc:  # the engine raises several unrelated error types
             raise EngineUnavailable(
                 f"cannot connect to shared MATLAB {self._shared_name!r}"
             ) from exc
         self._eng = eng
+        self._version = EngineVersion(str(info["modelVer"]), str(info["cfgHash"]))
         return eng
+
+    def version(self) -> EngineVersion:
+        """The loaded model's identity; falls back to the configured one if MATLAB is down,
+        so cached results can still be served while the grading node is unavailable."""
+        with self._lock:
+            try:
+                self._connect()
+            except EngineUnavailable:
+                if self._version is None:
+                    return EngineVersion(
+                        MODEL_VER, cfg_hash(self._nx_root / "config" / "threshold.json")
+                    )
+            assert self._version is not None
+            return self._version
 
     def warm_up(self) -> None:
         with self._lock:

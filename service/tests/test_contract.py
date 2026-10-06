@@ -207,97 +207,54 @@ def test_flagged_study_requires_nulls(tmp_path: Path) -> None:
         StudyResponse.model_validate({**flagged, "reviewRequired": False})
 
 
+def test_flagged_study_is_refer_unless_rejected(tmp_path: Path) -> None:
+    flagged_retake = {
+        **_retake(tmp_path),
+        "studyId": str(uuid.uuid4()),
+        "patientRef": "p-opaque",
+        "source": "cache",
+        "flag": "same_image_other_patient",
+        "createdAt": "2026-10-05T12:00:00Z",
+        "evidence": None,
+        "reviewRequired": True,
+    }
+    flagged_retake.pop("gradcamPath")
+    flagged_retake.pop("reportPath")
+    StudyResponse.model_validate(flagged_retake)
+
+    accepted = _study(
+        tmp_path,
+        flag="same_image_other_patient",
+        grade=None,
+        posterior=None,
+        pReferable=None,
+        evidence=None,
+        decision="RETAKE",
+        retakeGuidanceKey="retake.defocus.hold_steady",
+    )
+    with pytest.raises(ValidationError):
+        StudyResponse.model_validate(accepted)
+
+
 def test_unflagged_study_requires_evidence(tmp_path: Path) -> None:
     StudyResponse.model_validate(_study(tmp_path))
     with pytest.raises(ValidationError):
         StudyResponse.model_validate(_study(tmp_path, evidence=None))
 
 
-# --- HTTP ---------------------------------------------------------------------------------------
+def test_openapi_generates(tmp_path: Path) -> None:
+    from scripts.export_openapi import openapi_schema
 
-
-def _post(client: TestClient, name: str, **headers: str):
-    with open(FIXTURES / f"{name}.png", "rb") as fh:
-        return client.post(
-            "/analyze",
-            files={"file": (f"{name}.png", fh, "image/png")},
-            data={"patientRef": "p-opaque-1", "consentId": "c-1"},
-            headers={"Idempotency-Key": str(uuid.uuid4()), **headers},
-        )
-
-
-@pytest.mark.parametrize("name", sorted(EXPECTED))
-def test_analyze_returns_study(client: TestClient, name: str) -> None:
-    response = _post(client, name)
-    assert response.status_code == 200, response.text
-    assert response.headers["cache-control"] == "no-store"
-    study = StudyResponse.model_validate(response.json())
-    assert study.decision == EXPECTED[name][0]
-    assert study.patientRef == "p-opaque-1"
-    assert study.flag is None
-    assert "gradcamPath" not in response.json()
-
-
-def test_analyze_requires_idempotency_key(client: TestClient) -> None:
-    with open(FIXTURES / "grade0_clean.png", "rb") as fh:
-        response = client.post(
-            "/analyze",
-            files={"file": ("grade0_clean.png", fh, "image/png")},
-            data={"patientRef": "p", "consentId": "c"},
-        )
-    assert response.status_code == 422
-
-
-def test_analyze_rejects_non_image(client: TestClient) -> None:
-    response = client.post(
+    schema = openapi_schema()
+    for path in (
         "/analyze",
-        files={"file": ("notes.txt", b"hello", "text/plain")},
-        data={"patientRef": "p", "consentId": "c"},
-        headers={"Idempotency-Key": str(uuid.uuid4())},
-    )
-    assert response.status_code == 400
-    assert response.headers["cache-control"] == "no-store"
-
-
-def test_engine_contract_violation_is_502(tmp_path: Path) -> None:
-    class BrokenEngine:
-        name = "broken"
-
-        def ready(self) -> bool:
-            return True
-
-        def analyze_json(self, img_path: Path, out_dir: Path) -> str:
-            return json.dumps({"decision": "MAYBE"})
-
-    settings = Settings("fake", "netrasetu", REPO_ROOT / "matlab", tmp_path, [])
-    response = _post(TestClient(create_app(settings, BrokenEngine())), "grade0_clean")
-    assert response.status_code == 502
-
-
-def test_healthz(client: TestClient) -> None:
-    response = client.get("/healthz")
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "ok",
-        "engine": "fake",
-        "engineReady": True,
-        "contractVersion": "1.0",
-    }
-
-
-def test_cors_allows_configured_origin(client: TestClient) -> None:
-    response = client.options(
-        "/analyze",
-        headers={
-            "Origin": "http://localhost:5173",
-            "Access-Control-Request-Method": "POST",
-            "Access-Control-Request-Headers": "Idempotency-Key",
-        },
-    )
-    assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
-
-
-def test_openapi_generates(client: TestClient) -> None:
-    schema = client.get("/openapi.json").json()
-    assert "/analyze" in schema["paths"]
-    assert "StudyResponse" in schema["components"]["schemas"]
+        "/study/{study_id}",
+        "/review/queue",
+        "/review/{study_id}",
+        "/consent",
+        "/r/{token}",
+        "/healthz",
+    ):
+        assert path in schema["paths"], path
+    for name in ("StudyResponse", "QueuedBody", "PatientView", "ReviewRequest"):
+        assert name in schema["components"]["schemas"], name

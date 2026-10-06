@@ -1,5 +1,5 @@
 function out = netrasetu_analyze(imgPath, outDir)
-%NETRASETU_ANALYZE  DR screening pipeline for one fundus image (contract 1.0).
+%NETRASETU_ANALYZE  DR screening pipeline for one fundus image (contract 1.1).
 %   out = netrasetu_analyze(imgPath, outDir) returns a struct that jsonencode() serialises into
 %   the engine result in docs/CONTRACT.md, Section 6.1. Image artefacts (Grad-CAM, evidence
 %   crops, report) are written under outDir and returned as paths.

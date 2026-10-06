@@ -3,3 +3,11 @@ fastapi==0.142.2
 pydantic==2.13.5
 uvicorn==0.54.0
 python-multipart==0.0.32
+psycopg[binary]==3.3.6
+boto3==1.43.108
+PyJWT[crypto]==2.15.1
+cryptography==50.0.2
+prometheus-client==0.26.0
+# libvips for Deep Zoom tiles; pyvips-binary bundles it, so no system package is needed.
+pyvips==3.2.0
+pyvips-binary==8.18.7

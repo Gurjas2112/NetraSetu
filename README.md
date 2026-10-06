@@ -11,7 +11,7 @@ All algorithms live in MATLAB. Python (FastAPI) is the gateway; the web client i
 
 ## Quick start (Tier 0, fake engine — no MATLAB needed)
 
-Requirements: Python 3.12, Node >= 22.12. Keep the clone at a path without spaces
+Requirements: Python 3.12, Node >= 22.12, Docker. Keep the clone at a path without spaces
 (for example `C:\dev\netrasetu`).
 
 ```powershell
@@ -20,27 +20,26 @@ python -m venv .venv
 pip install -r service/requirements-gateway.txt -r requirements-dev.txt
 python scripts/make_fixtures.py
 
-$env:GATEWAY_ENGINE = "fake"
-$env:CORS_ORIGINS = "http://localhost:5173"
-uvicorn service.main:app --port 8000
+# Creates or completes the gitignored .env (generated secrets, never printed), starts the
+# containers, initialises Garage and runs the migrations. Safe to re-run.
+python scripts/dev_platform.py
+
+uvicorn service.main:create_app --factory --port 8000
 ```
 
-In a second terminal:
-
-```powershell
-npm --prefix web ci
-npm --prefix web run dev
-```
-
-Open `http://localhost:5173/field` and upload any image from `tests/fixtures/`.
+The gateway reads its configuration from the environment; load `.env` first (for example with
+your shell or IDE), or use the test suites below, which load it themselves. Every route except
+`/healthz`, `/metrics` and `/r/{token}` needs a Keycloak access token (see docs/CONTRACT.md); the
+web client gets one from the login flow in M5. Until then the Playwright suite signs its own
+test tokens.
 
 Tests:
 
 ```powershell
-python -m pytest -q
+python -m pytest -q           # database tests need the platform from dev_platform.py
 npm --prefix web run build
 
-# end-to-end: Playwright starts the fake-engine gateway and Vite itself
+# end-to-end: Playwright starts a test JWKS server, the fake-engine gateway and Vite itself
 npx --prefix web playwright install chromium
 $env:PYTHON = "$PWD\.venv\Scripts\python.exe"
 npm --prefix web run test:e2e
@@ -67,7 +66,8 @@ python scripts/migrate.py
 python scripts/migrate.py
 ```
 
-The second `migrate.py` prints `applied nothing`.
+The second `migrate.py` prints `applied nothing`. `python scripts/dev_platform.py [service ...]`
+does all of this in one step (CI runs it with `postgres garage`).
 
 ## Using the real MATLAB engine
 
