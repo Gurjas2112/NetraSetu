@@ -1,15 +1,17 @@
 # Deploy netrasetu_app_backend on Railway (project da130793-430e-410d-aef2-72521037b1dd).
 #
-# The CLI cannot use your email/username — you need a token once:
-#   https://railway.app/account/tokens  ->  New Token
+# Project deploy token (cannot run whoami/link):
+#   Project -> netrasetu_app_backend -> Settings -> Tokens -> Generate (production)
 #   $env:RAILWAY_TOKEN = '<token>'
-#   powershell -File scripts/railway_deploy.ps1
 #
-# Create two empty services in the Railway dashboard first: keycloak, gateway
-# (Project -> New Service -> Empty Service), or run `railway add` when logged in.
+# Full CLI (link, variables, whoami):
+#   https://railway.app/account/tokens -> $env:RAILWAY_API_TOKEN = '<token>'
+#
+# Create two empty services: keycloak, gateway
 
 param(
     [string]$ProjectId = "da130793-430e-410d-aef2-72521037b1dd",
+    [string]$Environment = "production",
     [string]$KeycloakService = "keycloak",
     [string]$GatewayService = "gateway"
 )
@@ -18,16 +20,23 @@ $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
 
 function Require-Railway {
-    if (-not $env:RAILWAY_TOKEN) {
-        Write-Host "Set RAILWAY_TOKEN from https://railway.app/account/tokens" -ForegroundColor Yellow
+    if ($env:RAILWAY_API_TOKEN -and $env:RAILWAY_TOKEN) {
+        Write-Host "Both token env vars set; using RAILWAY_TOKEN (project) and clearing RAILWAY_API_TOKEN."
+        Remove-Item Env:RAILWAY_API_TOKEN
+    }
+    if (-not $env:RAILWAY_TOKEN -and -not $env:RAILWAY_API_TOKEN) {
+        Write-Host "Set RAILWAY_TOKEN (project) or RAILWAY_API_TOKEN (account)." -ForegroundColor Yellow
         exit 1
     }
-    railway whoami 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Invalid RAILWAY_TOKEN" }
+    if ($env:RAILWAY_API_TOKEN) {
+        railway whoami 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Invalid RAILWAY_API_TOKEN" }
+    }
 }
 
 function Set-ServiceDockerfile([string]$Service, [string]$DockerfilePath) {
-    railway variables set "RAILWAY_DOCKERFILE_PATH=$DockerfilePath" -s $Service -p $ProjectId | Out-Null
+    $cmd = @("variables", "set", "RAILWAY_DOCKERFILE_PATH=$DockerfilePath", "-s", $Service, "-p", $ProjectId)
+    railway @cmd | Out-Null
 }
 
 function Get-ServiceDomain([string]$Service) {
@@ -41,7 +50,10 @@ function Get-ServiceDomain([string]$Service) {
 Require-Railway
 if (-not (Test-Path ".env.tier1")) { throw "Missing .env.tier1" }
 
-railway link $ProjectId | Out-Null
+if ($env:RAILWAY_API_TOKEN) {
+    railway link $ProjectId --environment $Environment | Out-Null
+}
+$deployFlags = @("-d", "-p", $ProjectId, "-e", $Environment)
 
 Write-Host "Configuring Keycloak ($KeycloakService)..."
 Set-ServiceDockerfile $KeycloakService "service/Dockerfile.keycloak"
@@ -49,7 +61,7 @@ railway variables set "KC_BOOTSTRAP_ADMIN_USERNAME=admin" -s $KeycloakService -p
 railway variables set "KC_BOOTSTRAP_ADMIN_PASSWORD=$([guid]::NewGuid().ToString('N'))" -s $KeycloakService -p $ProjectId | Out-Null
 
 Write-Host "Deploying Keycloak..."
-railway up -d -s $KeycloakService -p $ProjectId
+railway up @deployFlags -s $KeycloakService
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Start-Sleep -Seconds 8
@@ -81,7 +93,7 @@ $env:RAILWAY_SERVICE = $GatewayService
 Remove-Item Env:RAILWAY_SERVICE -ErrorAction SilentlyContinue
 
 Write-Host "Deploying gateway..."
-railway up -d -s $GatewayService -p $ProjectId
+railway up @deployFlags -s $GatewayService
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Start-Sleep -Seconds 8
