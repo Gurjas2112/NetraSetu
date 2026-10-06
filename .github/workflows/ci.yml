@@ -93,7 +93,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: matlab-actions/setup-matlab@v2
         with:
-          products: Image_Processing_Toolbox Computer_Vision_Toolbox Deep_Learning_Toolbox Statistics_and_Machine_Learning_Toolbox
+          products: Image_Processing_Toolbox Computer_Vision_Toolbox Deep_Learning_Toolbox Statistics_and_Machine_Learning_Toolbox SimEvents
       - uses: matlab-actions/run-tests@v2
         with:
           source-folder: matlab matlab/nx
