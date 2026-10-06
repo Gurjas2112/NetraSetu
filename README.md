@@ -1,7 +1,7 @@
 # NetraSetu
 
 NetraSetu is an explainable diabetic-retinopathy (DR) screening system for primary health centres
-in rural India (Smart India Hackathon PS 26038, MathWorks). A field worker captures a fundus image;
+in rural India . A field worker captures a fundus image;
 a MATLAB pipeline checks image quality, segments retinal structures and lesions, grades severity on
 the International Clinical DR scale, and returns one of three decisions — `REFER`, `ROUTINE` or
 `RETAKE` — together with lesion-level evidence, a Grad-CAM map and a calibrated posterior, so that
