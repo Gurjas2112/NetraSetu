@@ -88,6 +88,33 @@ To serve it, run `matlab.engine.shareEngine("netrasetu")` in an open MATLAB R202
 install `matlabengine` from `requirements.txt`, and start the gateway with
 `GATEWAY_ENGINE=matlab` and `MATLAB_SHARED_ENGINE=netrasetu`.
 
+## Tier 1 showcase (Vercel · Railway · Supabase Mumbai)
+
+Tier 1 is a public link for judges, not a production clinic. Create the three cloud projects by
+hand (never commit their secrets). Pick **South Asia (Mumbai)** (`ap-south-1`) when you create
+the Supabase project — the region cannot be changed afterwards.
+
+Connect both the Railway gateway and the laptop worker through the **session pooler on port
+5432**, never the transaction pooler on 6543. Transaction mode does not support prepared
+statements; psycopg starts preparing the claim query automatically, and the worker would fail
+after a few polls. The gateway uses the `gateway` role DSN; the worker uses the `worker` role
+DSN (`WORKER_DB_PASSWORD`) as `DATABASE_URL`.
+
+```powershell
+docker build -f service/Dockerfile.gateway .
+# Railway: GATEWAY_MODE=queue, GATEWAY_ENGINE=fake (or matlab only if a worker is pulling)
+
+# Laptop worker — outbound only; no tunnel
+$env:GATEWAY_ENGINE = "matlab"
+python -m service.worker
+```
+
+`web/vercel.json` rewrites the SPA and sets `Referrer-Policy: no-referrer`,
+`Permissions-Policy: camera=(self), microphone=()`, and `Cache-Control: no-cache` on `sw.js`.
+Daily keepalive is `.github/workflows/keepalive.yml`: store the session-pooler URI as the GitHub
+secret `SUPABASE_KEEPALIVE_URL` (not in `.env`). A paused free project will otherwise sleep
+before a demo.
+
 ## Documentation
 
 - Build rules for contributors and agents: [`AGENTS.md`](AGENTS.md)

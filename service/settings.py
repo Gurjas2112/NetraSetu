@@ -10,6 +10,7 @@ from typing import Literal
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 EngineKind = Literal["fake", "matlab"]
+GatewayMode = Literal["inprocess", "queue"]
 
 
 class SettingsError(ValueError):
@@ -73,6 +74,7 @@ class Settings:
     oidc_audience: str
     patient_token_secret: str
     s3: S3Settings
+    gateway_mode: GatewayMode = "inprocess"
     matlab_shared_engine: str = "netrasetu"
     nx_root: Path = REPO_ROOT / "matlab"
     work_dir: Path = REPO_ROOT / "results" / "work"
@@ -99,13 +101,14 @@ def load_settings() -> Settings:
     if engine not in ("fake", "matlab"):
         raise SettingsError(f"GATEWAY_ENGINE must be 'fake' or 'matlab', got {engine!r}")
     mode = _env("GATEWAY_MODE", "inprocess")
-    if mode != "inprocess":
-        raise SettingsError(f"GATEWAY_MODE={mode!r} is not implemented yet (queue mode is M6)")
+    if mode not in ("inprocess", "queue"):
+        raise SettingsError(f"GATEWAY_MODE must be 'inprocess' or 'queue', got {mode!r}")
     secret = _required("PATIENT_TOKEN_SECRET")
     if len(secret) < 32:
         raise SettingsError("PATIENT_TOKEN_SECRET must be at least 32 characters")
     return Settings(
         engine=engine,  # type: ignore[arg-type]
+        gateway_mode=mode,  # type: ignore[arg-type]
         database_url=_required("DATABASE_URL"),
         oidc_issuer=_required("OIDC_ISSUER"),
         oidc_audience=_required("OIDC_AUDIENCE"),

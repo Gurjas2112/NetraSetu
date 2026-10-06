@@ -29,7 +29,7 @@ from service import audit
 from service.auth import Principal
 from service.consent import require_screening_consent
 from service.db import Database
-from service.engine import Engine, EngineUnavailable
+from service.engine import Engine, EngineUnavailable, EngineVersion
 from service.metrics import Metrics
 from service.schemas import CONTRACT_VERSION, EngineResult, StudyEvidence, StudyResponse
 from service.settings import Settings
@@ -43,7 +43,7 @@ _EXTENSIONS = {"image/png": ".png", "image/jpeg": ".jpg"}
 
 
 class Queued(Exception):
-    """NX_CACHED_MODE is on and the image is not in the inference cache."""
+    """The image is waiting for a grading node (cached mode or GATEWAY_MODE=queue)."""
 
 
 @dataclass(frozen=True)
@@ -75,11 +75,15 @@ class Analyzed:
 def analyze(svc: Services, principal: Principal, inp: AnalyzeInput) -> Analyzed:
     sha = hashlib.sha256(inp.image).digest()
     fid = principal.facility_id
+    version: EngineVersion | None = None
 
     with svc.db.transaction(fid) as conn:
         existing = _replay(svc, conn, inp)
         if existing is not None:
             return Analyzed(existing, sha.hex(), created=False)
+        job_state = _job_state(conn, inp.client_key)
+        if job_state == "pending":
+            raise Queued()
         require_screening_consent(conn, inp.patient_id, inp.consent_id)
         other_patient = conn.execute(
             "SELECT clinical.image_seen_for_other_patient(%s, %s) AS seen",
@@ -87,10 +91,19 @@ def analyze(svc: Services, principal: Principal, inp: AnalyzeInput) -> Analyzed:
         ).fetchone()["seen"]
         version = svc.engine.version()
         payload = _cache_lookup(svc, conn, sha, version.model_ver, version.cfg_hash)
+        if job_state == "done" and payload is None:
+            raise Queued()
 
     source = "cache" if payload is not None else "matlab"
     if payload is None:
         if svc.settings.cached_mode:
+            raise Queued()
+        if svc.settings.gateway_mode == "queue":
+            assert version is not None
+            if job_state == "failed":
+                _requeue_failed(svc, principal.facility_id, inp.client_key)
+            else:
+                _enqueue_job(svc, principal, inp, sha, version)
             raise Queued()
         payload = _run_engine(svc, inp, sha)
 
@@ -137,6 +150,61 @@ def _replay(svc: Services, conn: psycopg.Connection, inp: AnalyzeInput) -> Study
         raise HTTPException(409, "Idempotency-Key has expired; send a new key")
     svc.metrics.cache_requests.labels("idempotency", "hit").inc()
     return load_study(conn, svc.storage, row["id"])
+
+
+def _job_state(conn: psycopg.Connection, client_key: UUID) -> str | None:
+    row = conn.execute(
+        "SELECT status FROM clinical.job WHERE client_key = %s", (client_key,)
+    ).fetchone()
+    if row is None:
+        return None
+    if row["status"] in ("done", "failed"):
+        return row["status"]
+    return "pending"
+
+
+def _requeue_failed(svc: Services, facility_id: UUID, client_key: UUID) -> None:
+    with svc.db.transaction(facility_id) as conn:
+        conn.execute(
+            """UPDATE clinical.job
+                  SET status = 'queued', error = NULL, worker = NULL,
+                      claimed_at = NULL, updated_at = now()
+                WHERE client_key = %s AND status = 'failed'""",
+            (client_key,),
+        )
+
+
+def _enqueue_job(
+    svc: Services,
+    principal: Principal,
+    inp: AnalyzeInput,
+    sha: bytes,
+    version: EngineVersion,
+) -> None:
+    job_id = uuid4()
+    image_key = f"inbox/{principal.facility_id}/{job_id}{_EXTENSIONS[inp.content_type]}"
+    svc.storage.put(image_key, inp.image, inp.content_type)
+    try:
+        with svc.db.transaction(principal.facility_id) as conn:
+            conn.execute(
+                """INSERT INTO clinical.job
+                       (id, facility_id, object_key, status, img_sha256, model_ver, cfg_hash,
+                        filename, content_type, client_key)
+                   VALUES (%s, %s, %s, 'queued', %s, %s, %s, %s, %s, %s)""",
+                (
+                    job_id,
+                    principal.facility_id,
+                    image_key,
+                    sha,
+                    version.model_ver,
+                    version.cfg_hash,
+                    inp.filename,
+                    inp.content_type,
+                    inp.client_key,
+                ),
+            )
+    except psycopg.errors.UniqueViolation:
+        pass
 
 
 def _cache_lookup(

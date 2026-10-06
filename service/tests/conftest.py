@@ -88,6 +88,11 @@ def gateway_url(admin_url: str) -> str:
     return role_url(admin_url, "gateway", os.environ["GATEWAY_DB_PASSWORD"])
 
 
+@pytest.fixture(scope="session")
+def worker_url(admin_url: str) -> str:
+    return role_url(admin_url, "worker", os.environ["WORKER_DB_PASSWORD"])
+
+
 @pytest.fixture
 def admin_db(admin_url: str) -> Iterator[psycopg.Connection[dict]]:
     with psycopg.connect(admin_url, autocommit=True, row_factory=dict_row) as conn:
