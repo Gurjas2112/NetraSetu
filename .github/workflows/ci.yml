@@ -27,6 +27,7 @@ jobs:
       - run: ruff format --check .
       - run: python scripts/dev_platform.py postgres garage
       - run: python -m pytest -q
+      - run: python eval/check_threshold_hash.py
 
   web:
     runs-on: ubuntu-latest
@@ -83,8 +84,11 @@ jobs:
 
   # MATLAB job (matlab-actions/setup-matlab + run-tests). Needs a MathWorks
   # licence on the runner; treat failures here as HUMAN-VERIFY on the laptop.
+  # continue-on-error keeps the workflow green when the licence is missing so
+  # the gateway / web / e2e jobs remain the merge gate (AGENTS.md M7).
   matlab:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: matlab-actions/setup-matlab@v2
