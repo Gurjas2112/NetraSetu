@@ -79,11 +79,28 @@ def params_from_csv(path: Path) -> dict[str, object]:
     }
 
 
+def _merge(existing: dict[str, object], patch: dict[str, object]) -> dict[str, object]:
+    merged = dict(existing)
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = {**merged[key], **value}  # type: ignore[arg-type]
+        else:
+            merged[key] = value
+    return merged
+
+
 def write_params(params: dict[str, object], *destinations: Path) -> None:
-    text = json.dumps(params, indent=2) + "\n"
     for dest in destinations:
         dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(text, encoding="utf-8")
+        payload = params
+        if dest.is_file():
+            try:
+                existing = json.loads(dest.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                existing = {}
+            if isinstance(existing, dict):
+                payload = _merge(existing, params)
+        dest.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
 def main(argv: list[str] | None = None) -> int:

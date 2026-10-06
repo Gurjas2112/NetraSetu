@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +16,23 @@ def _load(name: str, path: Path):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def test_write_params_merges_existing_json(tmp_path: Path) -> None:
+    mod = _load("locust_to_simevents", ROOT / "scripts" / "locust_to_simevents.py")
+    dest = tmp_path / "params.json"
+    dest.write_text(
+        '{"reworkRate": 0.11, "inferenceServiceTimeSeconds": {"p50": 9}}\n',
+        encoding="utf-8",
+    )
+    patch = {
+        "source": "load.csv",
+        "inferenceServiceTimeSeconds": {"p50": 1.0, "p95": 2.0},
+    }
+    mod.write_params(patch, dest)
+    merged = json.loads(dest.read_text(encoding="utf-8"))
+    assert merged["reworkRate"] == 0.11
+    assert merged["inferenceServiceTimeSeconds"] == {"p50": 1.0, "p95": 2.0}
 
 
 def test_params_from_csv_use_analyze_row_and_convert_ms_to_seconds(tmp_path: Path) -> None:

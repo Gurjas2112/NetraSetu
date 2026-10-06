@@ -9,6 +9,7 @@ data/*
 !data/splits.json
 results/
 matlab/simevents/params.json
+matlab/simevents/*.slx
 models/
 matlab/models/*
 !matlab/models/.gitkeep

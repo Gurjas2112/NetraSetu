@@ -59,6 +59,20 @@ python scripts/locust_to_simevents.py results/load
 
 `locust_to_simevents.py` copies p50/p95 from the CSV into `matlab/simevents/params.json` (gitignored). Do not type those times by hand.
 
+## Capacity model (SimEvents, HUMAN-VERIFY to simulate)
+
+Copy `matlab/simevents/params.json.example` to `matlab/simevents/params.json`, fill measured rework, cache-hit and triage fractions, then merge Locust inference times. Build the District Twin programmatically (no hand-edited `.slx`):
+
+```powershell
+matlab -batch "addpath('matlab/simevents'); build_district_twin; exit"
+```
+
+Sanity-check the grader pool with the analytic M/M/c helper (same rate units throughout):
+
+```powershell
+matlab -batch "addpath('matlab/simevents'); disp(erlang_check(3, 4, 2)); exit"
+```
+
 After changing `service/schemas.py`, regenerate the client types (never hand-edit them):
 
 ```powershell
