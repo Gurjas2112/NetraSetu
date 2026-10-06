@@ -73,6 +73,31 @@
           }
         },
         {
+          "name": "hpr-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "hpr_id",
+            "claim.name": "hpr_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-amr-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
           "name": "facility",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
@@ -151,6 +176,7 @@
       "authenticationExecutions": [
         {
           "authenticator": "auth-username-password-form",
+          "authenticatorConfig": "amr-password",
           "authenticatorFlow": false,
           "autheticatorFlow": false,
           "requirement": "REQUIRED",
@@ -175,7 +201,15 @@
       "alias": "otp-for-privileged",
       "config": {
         "forceOtpRole": "otp-required",
-        "defaultOtpOutcome": "skip"
+        "defaultOtpOutcome": "skip",
+        "default.reference.value": "otp"
+      }
+    },
+    {
+      "id": "c0ffee00-0000-4000-8000-000000000004",
+      "alias": "amr-password",
+      "config": {
+        "default.reference.value": "pwd"
       }
     }
   ]

@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { randomBytes } from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
 
 const FIXTURES = path.resolve(__dirname, "..", "fixtures");
@@ -12,11 +14,25 @@ const CASES = [
   { name: "partial_fov", decision: "RETAKE" },
 ] as const;
 
+// Each consent registers a new patient, and the gateway flags pixels it has already seen under
+// another patient. Trailing bytes after the PNG end chunk give every run fresh content while
+// the fake engine still keys on the file name.
+function freshFixture(name: string) {
+  const bytes = fs.readFileSync(path.join(FIXTURES, `${name}.png`));
+  return { name: `${name}.png`, mimeType: "image/png", buffer: Buffer.concat([bytes, randomBytes(16)]) };
+}
+
+async function screen(page: Page, name: string) {
+  await page.goto("/field");
+  await expect(page.getByTestId("consent-notice")).not.toBeEmpty();
+  await page.getByTestId("consent-given").check();
+  await page.getByTestId("file-input").setInputFiles(freshFixture(name));
+  await page.getByRole("button", { name: "Check image" }).click();
+}
+
 for (const { name, decision } of CASES) {
   test(`${name} on /field shows ${decision}`, async ({ page }) => {
-    await page.goto("/field");
-    await page.getByTestId("file-input").setInputFiles(path.join(FIXTURES, `${name}.png`));
-    await page.getByRole("button", { name: "Check image" }).click();
+    await screen(page, name);
 
     const banner = page.getByTestId("decision");
     await expect(banner).toHaveAttribute("data-decision", decision);
@@ -28,10 +44,17 @@ for (const { name, decision } of CASES) {
   });
 }
 
-test("the other three routes render the study", async ({ page }) => {
-  await page.goto("/field");
-  await page.getByTestId("file-input").setInputFiles(path.join(FIXTURES, "grade2_haem.png"));
+test("a retake for the same patient reuses the consent", async ({ page }) => {
+  await screen(page, "blur_s8");
+  await expect(page.getByTestId("decision")).toHaveAttribute("data-decision", "RETAKE");
+  await expect(page.getByTestId("consent-given")).toHaveCount(0);
+  await page.getByTestId("file-input").setInputFiles(freshFixture("grade0_clean"));
   await page.getByRole("button", { name: "Check image" }).click();
+  await expect(page.getByTestId("decision")).toHaveAttribute("data-decision", "ROUTINE");
+});
+
+test("the other three routes render the study", async ({ page }) => {
+  await screen(page, "grade2_haem");
   await expect(page.getByTestId("decision")).toHaveAttribute("data-decision", "REFER");
 
   await page.getByRole("link", { name: "Review" }).click();

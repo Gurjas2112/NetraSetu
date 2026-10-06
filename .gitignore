@@ -26,6 +26,7 @@ web/dist/
 web/dev-dist/
 *.tsbuildinfo
 playwright-report/
+tests/e2e/.tmp/
 test-results/
 blob-report/
 

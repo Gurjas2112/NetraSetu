@@ -30,7 +30,7 @@ function cfg = nx_config(options)
     thresholdCfg = jsondecode(char(bytes));
 
     cfg = struct();
-    cfg.contractVersion = "1.0";
+    cfg.contractVersion = "1.1";
     cfg.modelVer = "netrasetu_v1";
     cfg.matlabRoot = string(matlabRoot);
     cfg.thresholdPath = string(thresholdPath);

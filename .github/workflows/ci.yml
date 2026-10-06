@@ -9,26 +9,10 @@ permissions:
   contents: read
 
 jobs:
+  # Postgres and Garage come from docker-compose.yml via scripts/dev_platform.py, which writes a
+  # throwaway .env with generated secrets for this runner only.
   gateway:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: netrasetu
-          POSTGRES_PASSWORD: ci-only-not-a-secret
-          POSTGRES_DB: netrasetu
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U netrasetu -d netrasetu"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
-    env:
-      GATEWAY_ENGINE: fake
-      ADMIN_DATABASE_URL: postgresql://netrasetu:ci-only-not-a-secret@localhost:5432/netrasetu
-      GATEWAY_DB_PASSWORD: ci-gateway
-      WORKER_DB_PASSWORD: ci-worker
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -41,6 +25,7 @@ jobs:
       - run: pip install -r service/requirements-gateway.txt -r requirements-dev.txt
       - run: ruff check .
       - run: ruff format --check .
+      - run: python scripts/dev_platform.py postgres garage
       - run: python -m pytest -q
 
   web:
@@ -83,6 +68,7 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - run: python scripts/dev_platform.py postgres garage
       - run: npm --prefix web ci
       - run: npx playwright install --with-deps chromium
         working-directory: web

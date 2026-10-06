@@ -4,8 +4,7 @@
       "Body_analyze_analyze_post": {
         "properties": {
           "consentId": {
-            "maxLength": 128,
-            "minLength": 1,
+            "format": "uuid",
             "title": "Consentid",
             "type": "string"
           },
@@ -16,8 +15,7 @@
             "type": "string"
           },
           "patientRef": {
-            "maxLength": 128,
-            "minLength": 1,
+            "format": "uuid",
             "title": "Patientref",
             "type": "string"
           }
@@ -28,6 +26,84 @@
           "consentId"
         ],
         "title": "Body_analyze_analyze_post",
+        "type": "object"
+      },
+      "ConsentRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "language": {
+            "enum": [
+              "en",
+              "hi",
+              "mr"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "noticeHash": {
+            "description": "sha256 of the notice shown",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Noticehash",
+            "type": "string"
+          },
+          "patientRef": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Existing patient; omit to register a new patient",
+            "title": "Patientref"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "pattern": "^\\+?[0-9 -]{6,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "purpose": {
+            "const": "screening",
+            "title": "Purpose",
+            "type": "string"
+          }
+        },
+        "required": [
+          "purpose",
+          "noticeHash",
+          "language"
+        ],
+        "title": "ConsentRequest",
+        "type": "object"
+      },
+      "ConsentResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "consentId": {
+            "format": "uuid",
+            "title": "Consentid",
+            "type": "string"
+          },
+          "patientRef": {
+            "format": "uuid",
+            "title": "Patientref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consentId",
+          "patientRef"
+        ],
+        "title": "ConsentResponse",
         "type": "object"
       },
       "Criterion": {
@@ -103,10 +179,14 @@
         "additionalProperties": false,
         "properties": {
           "contractVersion": {
-            "const": "1.0",
-            "default": "1.0",
+            "const": "1.1",
+            "default": "1.1",
             "title": "Contractversion",
             "type": "string"
+          },
+          "databaseReady": {
+            "title": "Databaseready",
+            "type": "boolean"
           },
           "engine": {
             "title": "Engine",
@@ -123,14 +203,108 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "storageReady": {
+            "title": "Storageready",
+            "type": "boolean"
           }
         },
         "required": [
           "status",
           "engine",
-          "engineReady"
+          "engineReady",
+          "databaseReady",
+          "storageReady"
         ],
         "title": "HealthStatus",
+        "type": "object"
+      },
+      "PatientLinkRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "phone": {
+            "pattern": "^\\+?[0-9 -]{6,20}$",
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone"
+        ],
+        "title": "PatientLinkRequest",
+        "type": "object"
+      },
+      "PatientLinkResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "title": "Expiresat",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expiresAt"
+        ],
+        "title": "PatientLinkResponse",
+        "type": "object"
+      },
+      "PatientView": {
+        "additionalProperties": false,
+        "description": "What the patient link shows: the signed decision in lay terms, never a grade.",
+        "properties": {
+          "decision": {
+            "enum": [
+              "REFER",
+              "ROUTINE",
+              "RETAKE"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "laterality": {
+            "enum": [
+              "OD",
+              "OS",
+              "unknown"
+            ],
+            "title": "Laterality",
+            "type": "string"
+          },
+          "retakeGuidanceKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retakeguidancekey"
+          },
+          "reviewed": {
+            "title": "Reviewed",
+            "type": "boolean"
+          },
+          "screenedAt": {
+            "format": "date-time",
+            "title": "Screenedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "reviewed",
+          "laterality",
+          "screenedAt",
+          "retakeGuidanceKey"
+        ],
+        "title": "PatientView",
         "type": "object"
       },
       "Quality": {
@@ -176,6 +350,208 @@
           "phash"
         ],
         "title": "Quality",
+        "type": "object"
+      },
+      "QueuedBody": {
+        "additionalProperties": false,
+        "description": "503 body when NX_CACHED_MODE is on and the image is not in the inference cache.",
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "const": "queued",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "reason"
+        ],
+        "title": "QueuedBody",
+        "type": "object"
+      },
+      "ReviewQueueItem": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "REFER",
+              "ROUTINE",
+              "RETAKE"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "flag": {
+            "anyOf": [
+              {
+                "enum": [
+                  "same_image_other_patient",
+                  "repeat_screening"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "pReferable": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferable"
+          },
+          "studyId": {
+            "format": "uuid",
+            "title": "Studyid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "studyId",
+          "createdAt",
+          "decision",
+          "grade",
+          "pReferable",
+          "flag"
+        ],
+        "title": "ReviewQueueItem",
+        "type": "object"
+      },
+      "ReviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "REFER",
+              "ROUTINE",
+              "RETAKE"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "elapsedMs": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elapsedms"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "reasonChip": {
+            "anyOf": [
+              {
+                "enum": [
+                  "image_artefact",
+                  "lesion_miscount",
+                  "disc_region_confusion",
+                  "dme_missed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasonchip"
+          }
+        },
+        "required": [
+          "decision",
+          "grade"
+        ],
+        "title": "ReviewRequest",
+        "type": "object"
+      },
+      "ReviewResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "REFER",
+              "ROUTINE",
+              "RETAKE"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "overturn": {
+            "title": "Overturn",
+            "type": "boolean"
+          },
+          "reviewId": {
+            "format": "uuid",
+            "title": "Reviewid",
+            "type": "string"
+          },
+          "studyId": {
+            "format": "uuid",
+            "title": "Studyid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reviewId",
+          "studyId",
+          "decision",
+          "grade",
+          "overturn"
+        ],
+        "title": "ReviewResponse",
         "type": "object"
       },
       "StudyEvidence": {
@@ -262,7 +638,7 @@
             "type": "string"
           },
           "contractVersion": {
-            "const": "1.0",
+            "const": "1.1",
             "title": "Contractversion",
             "type": "string"
           },
@@ -509,12 +885,18 @@
         "title": "ValidationError",
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
     "description": "Explainable DR screening gateway. Contract: docs/CONTRACT.md",
     "title": "NetraSetu gateway",
-    "version": "1.0"
+    "version": "1.1"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -564,6 +946,46 @@
             },
             "description": "Bad Request"
           },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -588,14 +1010,100 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/QueuedBody"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorBody"
+                    }
+                  ],
+                  "title": "Response 503 Analyze Analyze Post"
                 }
               }
             },
             "description": "Service Unavailable"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Analyze"
+      }
+    },
+    "/consent": {
+      "post": {
+        "operationId": "give_consent_consent_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Give Consent"
       }
     },
     "/healthz": {
@@ -614,6 +1122,467 @@
           }
         },
         "summary": "Healthz"
+      }
+    },
+    "/r/{token}": {
+      "get": {
+        "operationId": "patient_view_r__token__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patient View"
+      }
+    },
+    "/review/queue": {
+      "get": {
+        "operationId": "review_queue_review_queue_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewQueueItem"
+                  },
+                  "title": "Response Review Queue Review Queue Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Review Queue"
+      }
+    },
+    "/review/{study_id}": {
+      "post": {
+        "operationId": "sign_review_review__study_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Study Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sign Review"
+      }
+    },
+    "/study/{study_id}": {
+      "get": {
+        "operationId": "get_study_study__study_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Study Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Study"
+      }
+    },
+    "/study/{study_id}/patient-link": {
+      "post": {
+        "operationId": "patient_link_study__study_id__patient_link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Study Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientLinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patient Link"
+      }
+    },
+    "/study/{study_id}/tiles/{tile_path}": {
+      "get": {
+        "operationId": "get_tile_study__study_id__tiles__tile_path__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Study Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tile_path",
+            "required": true,
+            "schema": {
+              "title": "Tile Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "307": {
+            "description": "Redirect to a presigned tile URL"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Tile"
       }
     }
   }

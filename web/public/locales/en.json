@@ -17,8 +17,9 @@
   },
   "field": {
     "title": "Screen a patient",
-    "patientRef": "Patient reference",
-    "consentId": "Consent reference",
+    "consentNotice": "Your eye photo will be checked by a computer and, if needed, by an eye specialist. It is used only for your screening.",
+    "consentGiven": "The patient has heard this notice and agrees",
+    "newPatient": "Next patient",
     "image": "Fundus image",
     "submit": "Check image",
     "assessing": "Checking image…",
@@ -26,6 +27,7 @@
     "why_other": "Why? ({{count}} findings)",
     "error": {
       "generic": "Something went wrong. Please try again.",
+      "unauthorized": "Your session has ended. Please sign in again.",
       "unavailable": "The grading service is not available right now. The image has not been graded."
     }
   },
