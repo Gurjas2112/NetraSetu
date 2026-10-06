@@ -140,6 +140,15 @@ after a few polls. The gateway uses the `gateway` role DSN; the worker uses the 
 DSN (`WORKER_DB_PASSWORD`) as `DATABASE_URL`.
 
 ```powershell
+# Supabase schema + .env.tier1 (session pooler, never commit):
+#   set SUPABASE_DB_PASSWORD / S3 keys / service role, then:
+python scripts/setup_tier1_supabase.py
+
+# Railway project netrasetu_app_backend (da130793-430e-410d-aef2-72521037b1dd):
+# Create services keycloak + gateway, then:
+#   $env:RAILWAY_TOKEN = '<from railway.app/account/tokens>'
+powershell -File scripts/railway_deploy.ps1
+
 docker build -f service/Dockerfile.gateway .
 # Railway: GATEWAY_MODE=queue, GATEWAY_ENGINE=fake (or matlab only if a worker is pulling)
 

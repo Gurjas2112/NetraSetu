@@ -11,10 +11,12 @@ if (-not (Test-Path ".env.tier1")) {
 railway whoami | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "Run: railway login" }
 
+Write-Host "Prefer: powershell -File scripts/railway_deploy.ps1 (with RAILWAY_TOKEN set)"
 railway link da130793-430e-410d-aef2-72521037b1dd
 
-Write-Host "Deploy Keycloak (create a dedicated Railway service if prompted)..."
-railway up --detach --dockerfile service/Dockerfile.keycloak
+Write-Host "Deploy Keycloak (service name: keycloak)..."
+railway variables set RAILWAY_DOCKERFILE_PATH=service/Dockerfile.keycloak -s keycloak
+railway up --detach -s keycloak
 $kc = Read-Host "Paste the public Keycloak base URL (https://....up.railway.app, no trailing slash)"
 
 $issuer = "$kc/realms/netrasetu"
@@ -25,9 +27,12 @@ if (-not (Select-String -Path .env.tier1 -Pattern '^OIDC_ISSUER=' -Quiet)) {
     Add-Content .env.tier1 "OIDC_ISSUER=$issuer"
 }
 
-Write-Host "Deploy gateway..."
-railway up --detach --dockerfile service/Dockerfile.gateway
+Write-Host "Deploy gateway (service name: gateway)..."
+$env:RAILWAY_SERVICE = "gateway"
+railway variables set RAILWAY_DOCKERFILE_PATH=service/Dockerfile.gateway -s gateway
 .\.venv\Scripts\python.exe scripts\railway_set_vars.py
+Remove-Item Env:RAILWAY_SERVICE -ErrorAction SilentlyContinue
+railway up --detach -s gateway
 $gw = Read-Host "Paste the public gateway URL (https://....up.railway.app)"
 
 vercel env add VITE_API_BASE production --force --value $gw

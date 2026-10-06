@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ def main() -> int:
     if not ENV_FILE.is_file():
         print("Missing .env.tier1 — run scripts/setup_tier1_supabase.py first.", file=sys.stderr)
         return 1
+    service = os.environ.get("RAILWAY_SERVICE", "").strip()
     pairs: list[tuple[str, str]] = []
     for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
         line = line.strip()
@@ -29,11 +31,10 @@ def main() -> int:
     if not pairs:
         return 1
     for key, value in pairs:
-        result = subprocess.run(
-            ["railway", "variables", "set", f"{key}={value}"],
-            cwd=ROOT,
-            check=False,
-        )
+        cmd = ["railway", "variables", "set", f"{key}={value}"]
+        if service:
+            cmd.extend(["-s", service])
+        result = subprocess.run(cmd, cwd=ROOT, check=False)
         if result.returncode != 0:
             print(f"Failed to set {key}", file=sys.stderr)
             return result.returncode

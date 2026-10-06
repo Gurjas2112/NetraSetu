@@ -1,0 +1,11 @@
+# Railway project: netrasetu_app_backend (da130793-430e-410d-aef2-72521037b1dd)
+# Create two services in the dashboard: "gateway" and "keycloak", then deploy with:
+#   railway up -s keycloak --dockerfile service/Dockerfile.keycloak
+#   railway up -s gateway --dockerfile service/Dockerfile.gateway
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
