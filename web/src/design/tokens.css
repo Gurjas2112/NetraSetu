@@ -29,7 +29,6 @@
   --t-data: 500 0.9375rem / 1.4 var(--font-mono);
   --t-caption: 400 0.8125rem / 1.35 var(--font-sans);
 
-  /* TODO(M5): self-host IBM Plex via Fontsource; system fallbacks until then */
   --font-sans: "IBM Plex Sans", "IBM Plex Sans Devanagari", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
