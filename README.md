@@ -37,6 +37,7 @@ Tests:
 
 ```powershell
 python -m pytest -q           # database tests need the platform from dev_platform.py
+npm --prefix web run test     # Vitest: posterior band, evidence strip, i18n key parity
 npm --prefix web run build
 
 # end-to-end: Playwright starts a test JWKS server, the fake-engine gateway and Vite itself

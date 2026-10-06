@@ -8,7 +8,8 @@
     "typeRoots": ["../../web/node_modules/@types"],
     "baseUrl": ".",
     "paths": {
-      "@playwright/test": ["../../web/node_modules/@playwright/test"]
+      "@playwright/test": ["../../web/node_modules/@playwright/test"],
+      "@axe-core/playwright": ["../../web/node_modules/@axe-core/playwright"]
     }
   },
   "include": ["*.ts"]

@@ -16,9 +16,11 @@ const DECISION_KEY: Record<Decision, string> = {
 export default function DecisionBanner({
   decision,
   guidanceKey,
+  attempt,
 }: {
   decision: Decision;
   guidanceKey?: string | null;
+  attempt?: number | null;
 }) {
   const { t } = useTranslation();
   const key = DECISION_KEY[decision];
@@ -34,6 +36,9 @@ export default function DecisionBanner({
       <p>{t(`decision.${key}.next`)}</p>
       {decision === "RETAKE" && guidanceKey ? (
         <p data-testid="retake-guidance">{t(guidanceKey)}</p>
+      ) : null}
+      {decision === "RETAKE" && attempt ? (
+        <p data-testid="retake-attempt">{t("field.attempt", { n: attempt, max: 3 })}</p>
       ) : null}
     </section>
   );

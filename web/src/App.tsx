@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Study } from "./api/client";
+import { setAccessToken, type Study } from "./api/client";
 import { setLanguage, SUPPORTED_LANGUAGES, type Language } from "./i18n";
 import { Link, useRoute } from "./router";
 import AdminRoute from "./routes/admin/AdminRoute";
@@ -13,6 +13,12 @@ export default function App() {
   const route = useRoute();
   // Held in memory only: clinical data never goes to localStorage or any cache.
   const [study, setStudy] = useState<Study | null>(null);
+
+  const signOut = async () => {
+    setAccessToken(null);
+    setStudy(null);
+    if (typeof caches !== "undefined") await caches.delete("tiles");
+  };
 
   return (
     <div className="min-h-screen">
@@ -41,12 +47,15 @@ export default function App() {
             ))}
           </select>
         </label>
+        <button type="button" onClick={() => void signOut()} className="underline">
+          {t("auth.signOut")}
+        </button>
       </header>
-      <main className="p-6">
-        {route === "/field" && <FieldRoute study={study} onStudy={setStudy} />}
-        {route === "/review" && <ReviewRoute study={study} />}
-        {route === "/patient" && <PatientRoute study={study} />}
-        {route === "/admin" && <AdminRoute />}
+      <main className={route.path === "/review" ? "" : "p-6"}>
+        {route.path === "/field" && <FieldRoute study={study} onStudy={setStudy} />}
+        {route.path === "/review" && <ReviewRoute study={study} />}
+        {route.path === "/patient" && <PatientRoute study={study} token={route.patientToken} />}
+        {route.path === "/admin" && <AdminRoute />}
       </main>
     </div>
   );
