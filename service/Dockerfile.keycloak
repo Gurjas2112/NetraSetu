@@ -1,0 +1,9 @@
+# Keycloak for Tier 1 showcase (Railway or any container host). Realm import is committed.
+FROM quay.io/keycloak/keycloak:26.0.7
+COPY platform/keycloak/realm-export.json /opt/keycloak/data/import/netrasetu-realm.json
+ENV KC_HEALTH_ENABLED=true
+ENV KC_HTTP_ENABLED=true
+ENV KC_HOSTNAME_STRICT=false
+ENV KC_PROXY=edge
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+CMD ["start-dev", "--import-realm", "--http-port=8080"]
