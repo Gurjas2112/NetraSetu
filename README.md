@@ -74,11 +74,14 @@ does all of this in one step (CI runs it with `postgres garage`).
 Check the stub contract from the repository root:
 
 ```powershell
-matlab -batch "addpath('matlab','matlab/nx'); r = runtests('matlab/tests/unit'); exit(any([r.Failed]))"
+matlab -batch "addpath('matlab','matlab/nx'); r = runtests('matlab/tests', 'IncludeSubfolders', true); disp(table(r)); exit(any([r.Failed]))"
 New-Item -ItemType Directory -Force results | Out-Null
 matlab -batch "addpath('matlab','matlab/nx'); writelines(netrasetu_analyze_json('tests/fixtures/grade2_haem.png', tempdir), 'results/stub.json')"
 python -m service.validate_json results/stub.json
+python eval/check_threshold_hash.py
 ```
+
+Training (`matlab/train/*.m`) and `eval/run_validation.m` need local datasets under `data/` (never committed) and write `results/validation.json` on this machine only.
 
 To serve it, run `matlab.engine.shareEngine("netrasetu")` in an open MATLAB R2026b session,
 install `matlabengine` from `requirements.txt`, and start the gateway with

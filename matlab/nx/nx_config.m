@@ -35,13 +35,18 @@ function cfg = nx_config(options)
     cfg.matlabRoot = string(matlabRoot);
     cfg.thresholdPath = string(thresholdPath);
     cfg.cfgHash = "sha256:" + local_sha256_hex(bytes);
-    cfg.thresholdIsPlaceholder = isfield(thresholdCfg, "placeholder") && thresholdCfg.placeholder;
+    cfg.thresholdIsPlaceholder = isfield(thresholdCfg, "placeholder") && logical(thresholdCfg.placeholder);
     if isfield(thresholdCfg, "threshold") && isnumeric(thresholdCfg.threshold) ...
-            && isscalar(thresholdCfg.threshold)
+            && isscalar(thresholdCfg.threshold) && isfinite(thresholdCfg.threshold)
         cfg.threshold = double(thresholdCfg.threshold);
     else
         cfg.threshold = NaN;
     end
+    cfg.inputSize = [512 512];
+    cfg.modelFile = string(fullfile(matlabRoot, "models", "netrasetu_v1.mat"));
+    cfg.maxRetakes = 3;
+    cfg.dupWindowDays = 30;
+    cfg.useGPU = canUseGPU();
 
     cached = cfg;
 end
