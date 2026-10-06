@@ -27,6 +27,7 @@ jobs:
       - run: ruff format --check .
       - run: python scripts/dev_platform.py postgres garage
       - run: python -m pytest -q
+      - run: python eval/check_threshold_hash.py
 
   web:
     runs-on: ubuntu-latest
@@ -44,6 +45,7 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm --prefix web ci
+      - run: npm --prefix web run test
       - name: Generated API types are up to date
         run: |
           python scripts/export_openapi.py
@@ -80,4 +82,19 @@ jobs:
           path: web/test-results
           retention-days: 7
 
-  # MATLAB job (matlab-actions/setup-matlab + run-tests) is added in milestone M4.
+  # MATLAB job (matlab-actions/setup-matlab + run-tests). Needs a MathWorks
+  # licence on the runner; treat failures here as HUMAN-VERIFY on the laptop.
+  # continue-on-error keeps the workflow green when the licence is missing so
+  # the gateway / web / e2e jobs remain the merge gate (AGENTS.md M7).
+  matlab:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: matlab-actions/setup-matlab@v2
+        with:
+          products: Image_Processing_Toolbox Computer_Vision_Toolbox Deep_Learning_Toolbox Statistics_and_Machine_Learning_Toolbox SimEvents
+      - uses: matlab-actions/run-tests@v2
+        with:
+          source-folder: matlab matlab/nx
+          select-by-folder: matlab/tests

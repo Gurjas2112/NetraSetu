@@ -27,6 +27,16 @@ python scripts/dev_platform.py
 uvicorn service.main:create_app --factory --port 8000
 ```
 
+### One-command Tier 0 demo
+
+After the venv and `npm install` under `web/`, from the repository root:
+
+```powershell
+.\start-demo.ps1
+```
+
+On Linux or macOS: `./start-demo.sh`. The script runs `dev_platform.py`, seeds **30 days of synthetic programme data** across four facilities (`python scripts/seed_demo.py`, idempotent; `--force` replaces prior synthetic rows), starts the gateway on `0.0.0.0:8000`, waits for `/healthz`, then opens the web dev server with `--host` so a phone on the hotspot can reach the laptop. Data is marked `seedDemo` in JSON and `synthetic: true` in audit — not real patients. For camera and offline mode over HTTP on Android, see the product spec Tier 0 runbook (Chrome insecure-origin flag).
+
 The gateway reads its configuration from the environment; load `.env` first (for example with
 your shell or IDE), or use the test suites below, which load it themselves. Every route except
 `/healthz`, `/metrics` and `/r/{token}` needs a Keycloak access token (see docs/CONTRACT.md); the
@@ -37,12 +47,40 @@ Tests:
 
 ```powershell
 python -m pytest -q           # database tests need the platform from dev_platform.py
+npm --prefix web run test     # Vitest: posterior band, evidence strip, i18n key parity
 npm --prefix web run build
 
 # end-to-end: Playwright starts a test JWKS server, the fake-engine gateway and Vite itself
 npx --prefix web playwright install chromium
 $env:PYTHON = "$PWD\.venv\Scripts\python.exe"
 npm --prefix web run test:e2e
+```
+
+Load (laptop, not CI). A running in-process gateway and a screener bearer token are required.
+Each request changes one pixel so the inference cache misses and the engine is timed:
+
+```powershell
+New-Item -ItemType Directory -Force results | Out-Null
+$env:LOCUST_ACCESS_TOKEN = "<screener access token>"
+locust -f tests/load/locustfile.py --headless -u 4 -r 1 -t 5m --csv results/load --host http://127.0.0.1:8000
+python scripts/locust_to_simevents.py results/load
+.\scripts\zap-baseline.ps1
+```
+
+`locust_to_simevents.py` copies p50/p95 from the CSV into `matlab/simevents/params.json` (gitignored). Do not type those times by hand.
+
+## Capacity model (SimEvents, HUMAN-VERIFY to simulate)
+
+Copy `matlab/simevents/params.json.example` to `matlab/simevents/params.json`, fill measured rework, cache-hit and triage fractions, then merge Locust inference times. Build the District Twin programmatically (no hand-edited `.slx`):
+
+```powershell
+matlab -batch "addpath('matlab/simevents'); build_district_twin; exit"
+```
+
+Sanity-check the grader pool with the analytic M/M/c helper (same rate units throughout):
+
+```powershell
+matlab -batch "addpath('matlab/simevents'); disp(erlang_check(3, 4, 2)); exit"
 ```
 
 After changing `service/schemas.py`, regenerate the client types (never hand-edit them):
@@ -74,15 +112,45 @@ does all of this in one step (CI runs it with `postgres garage`).
 Check the stub contract from the repository root:
 
 ```powershell
-matlab -batch "addpath('matlab','matlab/nx'); r = runtests('matlab/tests/unit'); exit(any([r.Failed]))"
+matlab -batch "addpath('matlab','matlab/nx'); r = runtests('matlab/tests', 'IncludeSubfolders', true); disp(table(r)); exit(any([r.Failed]))"
 New-Item -ItemType Directory -Force results | Out-Null
 matlab -batch "addpath('matlab','matlab/nx'); writelines(netrasetu_analyze_json('tests/fixtures/grade2_haem.png', tempdir), 'results/stub.json')"
 python -m service.validate_json results/stub.json
+python eval/check_threshold_hash.py
 ```
+
+Training (`matlab/train/*.m`) and `eval/run_validation.m` need local datasets under `data/` (never committed) and write `results/validation.json` on this machine only.
 
 To serve it, run `matlab.engine.shareEngine("netrasetu")` in an open MATLAB R2026b session,
 install `matlabengine` from `requirements.txt`, and start the gateway with
 `GATEWAY_ENGINE=matlab` and `MATLAB_SHARED_ENGINE=netrasetu`.
+
+## Tier 1 showcase (Vercel · Railway · Supabase Mumbai)
+
+Tier 1 is a public link for judges, not a production clinic. Create the three cloud projects by
+hand (never commit their secrets). Pick **South Asia (Mumbai)** (`ap-south-1`) when you create
+the Supabase project — the region cannot be changed afterwards.
+
+Connect both the Railway gateway and the laptop worker through the **session pooler on port
+5432**, never the transaction pooler on 6543. Transaction mode does not support prepared
+statements; psycopg starts preparing the claim query automatically, and the worker would fail
+after a few polls. The gateway uses the `gateway` role DSN; the worker uses the `worker` role
+DSN (`WORKER_DB_PASSWORD`) as `DATABASE_URL`.
+
+```powershell
+docker build -f service/Dockerfile.gateway .
+# Railway: GATEWAY_MODE=queue, GATEWAY_ENGINE=fake (or matlab only if a worker is pulling)
+
+# Laptop worker — outbound only; no tunnel
+$env:GATEWAY_ENGINE = "matlab"
+python -m service.worker
+```
+
+`web/vercel.json` rewrites the SPA and sets `Referrer-Policy: no-referrer`,
+`Permissions-Policy: camera=(self), microphone=()`, and `Cache-Control: no-cache` on `sw.js`.
+Daily keepalive is `.github/workflows/keepalive.yml`: store the session-pooler URI as the GitHub
+secret `SUPABASE_KEEPALIVE_URL` (not in `.env`). A paused free project will otherwise sleep
+before a demo.
 
 ## Documentation
 

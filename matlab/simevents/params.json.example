@@ -1,0 +1,19 @@
+{
+  "_comment": "Copy to params.json (gitignored). inferenceServiceTimeSeconds comes from scripts/locust_to_simevents.py. Other rates must be measured — never type service times or clinical numbers by hand.",
+  "source": null,
+  "name": null,
+  "inferenceServiceTimeSeconds": {
+    "p50": null,
+    "p95": null
+  },
+  "graderServiceTimeSeconds": 30,
+  "graderCount": null,
+  "arrivalsPerDay": null,
+  "simulationDays": 1,
+  "reworkRate": null,
+  "cacheHitRate": null,
+  "referToReviewFraction": null,
+  "uploadMegabytes": null,
+  "uplinkMbps": null,
+  "qualityGateSeconds": 5
+}

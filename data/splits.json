@@ -1,0 +1,7 @@
+{
+  "level": "patient",
+  "note": "Filled by matlab/train/write_splits.m from local labels. Empty until then.",
+  "train": [],
+  "validation": [],
+  "test": []
+}

@@ -29,6 +29,19 @@
       "generic": "Something went wrong. Please try again.",
       "unauthorized": "Your session has ended. Please sign in again.",
       "unavailable": "The grading service is not available right now. The image has not been graded."
+    },
+    "identify": "Who is being screened",
+    "phone": "Phone (optional)",
+    "attempt": "Attempt {{n}} of {{max}}",
+    "ring": {
+      "ready": "Image looks sharp enough to grade",
+      "hold": "Hold the camera steady"
+    },
+    "stage": {
+      "quality": "Checking image quality",
+      "disc": "Finding the optic disc",
+      "lesions": "Looking for lesions",
+      "grade": "Grading"
     }
   },
   "decision": {
@@ -64,6 +77,12 @@
     "escalate": "Cannot screen here — refer for a dilated exam."
   },
   "icdr": {
+    "l1": {
+      "microaneurysms_only": "Microaneurysms only (ICDR level 1)"
+    },
+    "exudates": {
+      "present": "Hard exudates present"
+    },
     "l2": {
       "haemorrhages_multi_quadrant": "Haemorrhages in more than one quadrant (ICDR level 2)"
     },
@@ -92,7 +111,22 @@
     "modelVer": "Model",
     "none": "—",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "caseOf": "Case {{n}} / {{total}}",
+    "median": "median {{s}}s",
+    "clearTiles": "Clear tile cache",
+    "keys": "J/K next · A agree · O overturn · U cannot grade · 1–5 overlays · G Grad-CAM · Z 1:1",
+    "agree": "Agree",
+    "overturn": "Overturn",
+    "ungradeable": "Cannot grade",
+    "signed": "Signed {{decision}}",
+    "error": "Could not save the review.",
+    "reason": {
+      "image_artefact": "Image artefact",
+      "lesion_miscount": "Lesion miscount",
+      "disc_region_confusion": "Disc-region confusion",
+      "dme_missed": "DME missed"
+    }
   },
   "patient": {
     "title": "Your eye check",
@@ -111,8 +145,13 @@
     },
     "where": {
       "heading": "Where to go",
-      "pending": "Your health worker will give you the place and time."
-    }
+      "pending": "Your health worker will give you the place and time.",
+      "slot": "A clinic slot is held. Your health worker will confirm the day and time."
+    },
+    "readAloud": "Read aloud",
+    "showClinical": "Show clinical details",
+    "hideClinical": "Hide clinical details",
+    "gone": "This link has already been used or has expired."
   },
   "admin": {
     "title": "Programme health",
@@ -120,6 +159,40 @@
     "unreachable": "The gateway cannot be reached.",
     "status": "Status",
     "engine": "Engine",
-    "contract": "Contract version"
+    "contract": "Contract version",
+    "throughput": "Simulated vs measured throughput",
+    "gradability": "Gradability by site",
+    "drift": "Model drift",
+    "funnel": "Referral funnel",
+    "awaitingLive": "Empty until live programme data is connected. No placeholder numbers.",
+    "grafana": "Grafana",
+    "grafanaHint": "Grafana runs on the local stack. Open it from the host shown in docker compose."
+  },
+  "queue": {
+    "screened_one": "{{count}} screened",
+    "screened_other": "{{count}} screened",
+    "waiting_one": "{{count}} waiting to sync",
+    "waiting_other": "{{count}} waiting to sync",
+    "lastSync": "last sync {{time}}",
+    "never": "never"
+  },
+  "evidence": {
+    "title": "Evidence",
+    "empty": "No lesion crops for this image.",
+    "heading": "{{count}} findings"
+  },
+  "posterior": {
+    "label": "Calibrated grade posterior",
+    "empty": "No posterior for this image.",
+    "referable": "Referable DR"
+  },
+  "quadrant": {
+    "ST": "superotemporal",
+    "SN": "superonasal",
+    "IT": "inferotemporal",
+    "IN": "inferonasal"
+  },
+  "auth": {
+    "signOut": "Sign out"
   }
 }

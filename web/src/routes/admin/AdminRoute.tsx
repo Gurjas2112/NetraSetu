@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { health, type Health } from "../../api/client";
+
+const EMPTY_BARS = [
+  { name: "PHC", value: 0 },
+  { name: "CHC", value: 0 },
+  { name: "DH", value: 0 },
+];
 
 export default function AdminRoute() {
   const { t } = useTranslation();
   const [status, setStatus] = useState<Health | null>(null);
   const [failed, setFailed] = useState(false);
+  const grafana = import.meta.env.VITE_GRAFANA_URL;
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +44,45 @@ export default function AdminRoute() {
           <dd style={{ font: "var(--t-data)" }}>{status.contractVersion}</dd>
         </dl>
       )}
+
+      <div className="mt-8 grid gap-6 md:grid-cols-2">
+        <section className="border p-4" style={{ borderColor: "var(--nx-slate-200)" }} data-testid="admin-throughput">
+          <h2 className="font-semibold">{t("admin.throughput")}</h2>
+          <p style={{ font: "var(--t-caption)", color: "var(--nx-slate-700)" }}>{t("admin.awaitingLive")}</p>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={EMPTY_BARS}>
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Bar dataKey="value" fill="var(--nx-signal)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+        <section className="border p-4" style={{ borderColor: "var(--nx-slate-200)" }} data-testid="admin-gradability">
+          <h2 className="font-semibold">{t("admin.gradability")}</h2>
+          <p style={{ font: "var(--t-caption)", color: "var(--nx-slate-700)" }}>{t("admin.awaitingLive")}</p>
+        </section>
+        <section className="border p-4" style={{ borderColor: "var(--nx-slate-200)" }} data-testid="admin-drift">
+          <h2 className="font-semibold">{t("admin.drift")}</h2>
+          <p style={{ font: "var(--t-caption)", color: "var(--nx-slate-700)" }}>{t("admin.awaitingLive")}</p>
+        </section>
+        <section className="border p-4" style={{ borderColor: "var(--nx-slate-200)" }} data-testid="admin-funnel">
+          <h2 className="font-semibold">{t("admin.funnel")}</h2>
+          <p style={{ font: "var(--t-caption)", color: "var(--nx-slate-700)" }}>{t("admin.awaitingLive")}</p>
+        </section>
+      </div>
+
+      <section className="mt-8">
+        <h2 className="font-semibold">{t("admin.grafana")}</h2>
+        {grafana ? (
+          <iframe title={t("admin.grafana")} src={grafana} className="mt-2 h-96 w-full border-0" />
+        ) : (
+          <p className="mt-2" style={{ font: "var(--t-caption)" }}>
+            {t("admin.grafanaHint")}
+          </p>
+        )}
+      </section>
     </div>
   );
 }

@@ -5,6 +5,10 @@ export type Health = components["schemas"]["HealthStatus"];
 export type Consent = components["schemas"]["ConsentResponse"];
 export type ConsentRequest = components["schemas"]["ConsentRequest"];
 export type Decision = Study["decision"];
+export type ReviewQueueItem = components["schemas"]["ReviewQueueItem"];
+export type ReviewRequest = components["schemas"]["ReviewRequest"];
+export type ReviewResponse = components["schemas"]["ReviewResponse"];
+export type PatientView = components["schemas"]["PatientView"];
 
 export const API_BASE: string = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 
@@ -16,6 +20,10 @@ let accessToken: string | null = import.meta.env.DEV
 
 export function setAccessToken(token: string | null): void {
   accessToken = token;
+}
+
+export function getAccessToken(): string | null {
+  return accessToken;
 }
 
 function authHeaders(): Record<string, string> {
@@ -45,6 +53,11 @@ async function readError(response: Response): Promise<ApiError> {
   return new ApiError(response.status, detail);
 }
 
+async function json<T>(response: Response): Promise<T> {
+  if (!response.ok) throw await readError(response);
+  return (await response.json()) as T;
+}
+
 export async function sha256Hex(text: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
@@ -57,8 +70,7 @@ export async function giveConsent(body: ConsentRequest): Promise<Consent> {
     headers: { "Content-Type": "application/json", ...authHeaders() },
     cache: "no-store",
   });
-  if (!response.ok) throw await readError(response);
-  return (await response.json()) as Consent;
+  return json<Consent>(response);
 }
 
 export async function analyze(file: File, patientRef: string, consentId: string): Promise<Study> {
@@ -72,12 +84,41 @@ export async function analyze(file: File, patientRef: string, consentId: string)
     headers: { "Idempotency-Key": crypto.randomUUID(), ...authHeaders() },
     cache: "no-store",
   });
-  if (!response.ok) throw await readError(response);
-  return (await response.json()) as Study;
+  return json<Study>(response);
+}
+
+export async function getStudy(studyId: string): Promise<Study> {
+  const response = await fetch(`${API_BASE}/study/${studyId}`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  return json<Study>(response);
+}
+
+export async function fetchReviewQueue(): Promise<ReviewQueueItem[]> {
+  const response = await fetch(`${API_BASE}/review/queue`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  return json<ReviewQueueItem[]>(response);
+}
+
+export async function signReview(studyId: string, body: ReviewRequest): Promise<ReviewResponse> {
+  const response = await fetch(`${API_BASE}/review/${studyId}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    cache: "no-store",
+  });
+  return json<ReviewResponse>(response);
+}
+
+export async function redeemPatientToken(token: string): Promise<PatientView> {
+  const response = await fetch(`${API_BASE}/r/${token}`, { cache: "no-store" });
+  return json<PatientView>(response);
 }
 
 export async function health(): Promise<Health> {
   const response = await fetch(`${API_BASE}/healthz`, { cache: "no-store" });
-  if (!response.ok) throw await readError(response);
-  return (await response.json()) as Health;
+  return json<Health>(response);
 }
