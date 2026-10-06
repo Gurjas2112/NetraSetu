@@ -37,6 +37,8 @@ After the venv and `npm install` under `web/`, from the repository root:
 
 On Linux or macOS: `./start-demo.sh`. The script runs `dev_platform.py`, seeds **30 days of synthetic programme data** across four facilities (`python scripts/seed_demo.py`, idempotent; `--force` replaces prior synthetic rows), starts the gateway on `0.0.0.0:8000`, waits for `/healthz`, then opens the web dev server with `--host` so a phone on the hotspot can reach the laptop. Data is marked `seedDemo` in JSON and `synthetic: true` in audit — not real patients. For camera and offline mode over HTTP on Android, see the product spec Tier 0 runbook (Chrome insecure-origin flag).
 
+**App walkthrough video (local):** `powershell -File scripts/record_app_demo.ps1` writes `results/demo-recording/NetraSetu-app-walkthrough.webm` (gitignored). Requires `npx playwright install chromium` once under `web/`.
+
 The gateway reads its configuration from the environment; load `.env` first (for example with
 your shell or IDE), or use the test suites below, which load it themselves. Every route except
 `/healthz`, `/metrics` and `/r/{token}` needs a Keycloak access token (see docs/CONTRACT.md); the

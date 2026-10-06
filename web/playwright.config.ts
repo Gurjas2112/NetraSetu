@@ -67,6 +67,8 @@ function dotenv(file: string): Record<string, string> {
 
 const key = signingKey();
 const jwksDir = publishJwks(key);
+const demoRecord = process.env.DEMO_RECORD === "1";
+const demoVideoDir = path.join(root, "results", "demo-recording");
 
 export default defineConfig({
   testDir: "../tests/e2e",
@@ -75,9 +77,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
+  ...(demoRecord ? { outputDir: demoVideoDir } : {}),
   use: {
     baseURL: "http://localhost:5173",
     trace: "retain-on-failure",
+    ...(demoRecord
+      ? { video: "on" as const, launchOptions: { slowMo: 400 } }
+      : { video: "off" as const }),
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
