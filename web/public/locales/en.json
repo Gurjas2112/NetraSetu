@@ -64,6 +64,12 @@
     "escalate": "Cannot screen here — refer for a dilated exam."
   },
   "icdr": {
+    "l1": {
+      "microaneurysms_only": "Microaneurysms only (ICDR level 1)"
+    },
+    "exudates": {
+      "present": "Hard exudates present"
+    },
     "l2": {
       "haemorrhages_multi_quadrant": "Haemorrhages in more than one quadrant (ICDR level 2)"
     },
