@@ -1,0 +1,11 @@
+{
+  "_comment": "Filled by scripts/locust_to_simevents.py from Locust CSV. Never type service times by hand. Copy to params.json (gitignored) after a load run.",
+  "source": null,
+  "name": "/analyze",
+  "requestCount": null,
+  "failureCount": null,
+  "inferenceServiceTimeSeconds": {
+    "p50": null,
+    "p95": null
+  }
+}

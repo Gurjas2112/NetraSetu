@@ -46,6 +46,19 @@ $env:PYTHON = "$PWD\.venv\Scripts\python.exe"
 npm --prefix web run test:e2e
 ```
 
+Load (laptop, not CI). A running in-process gateway and a screener bearer token are required.
+Each request changes one pixel so the inference cache misses and the engine is timed:
+
+```powershell
+New-Item -ItemType Directory -Force results | Out-Null
+$env:LOCUST_ACCESS_TOKEN = "<screener access token>"
+locust -f tests/load/locustfile.py --headless -u 4 -r 1 -t 5m --csv results/load --host http://127.0.0.1:8000
+python scripts/locust_to_simevents.py results/load
+.\scripts\zap-baseline.ps1
+```
+
+`locust_to_simevents.py` copies p50/p95 from the CSV into `matlab/simevents/params.json` (gitignored). Do not type those times by hand.
+
 After changing `service/schemas.py`, regenerate the client types (never hand-edit them):
 
 ```powershell

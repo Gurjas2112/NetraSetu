@@ -8,6 +8,7 @@ garage.toml
 data/*
 !data/splits.json
 results/
+matlab/simevents/params.json
 models/
 matlab/models/*
 !matlab/models/.gitkeep
